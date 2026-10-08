@@ -2,11 +2,31 @@
 
 Classroom robotics tournament controller and drag race / gap traversal flight dashboard.
 
-## Features
+## Modular Architecture
+The application is structured into decoupled components:
+- **`index.html`**: Clean semantic layout, modal containers, and viewport controls.
+- **`css/styles.css`**: Tailwind classes, custom scrollbars, projector mode styling, and keyframe animations.
+- **`js/audio.js`** (`Arena.Audio`): Live soundpack synthesizer supporting:
+  - *Cyber Synth* (default futuristic arena lasers & sweep risers)
+  - *8-Bit Retro* (arcade square-wave chiptunes)
+  - *Stadium Energy* (high-energy brass fanfare & arena horns)
+  - *Clean Chimes* (gentle acoustic bells)
+- **`js/overlays.js`** (`Arena.Overlays`): Visual effects engine:
+  - Dual-cannon confetti celebrations
+  - Structural failure screen shake
+  - Apex record golden strobe flash
+  - Sudden death flashing hazard beacons
+  - Competition completion CSV save prompt modal
+- **`js/state.js`** (`Arena.State`): Competition ledger, calculation engine, localStorage persistence, and CSV export/import.
+- **`js/ui.js`** (`Arena.UI`): DOM rendering, queue cards, matrix tables, leaderboard clash analytics, and hotkeys.
+- **`js/app.js`** (`Arena.App`): Application bootstrap and coordination.
+
+## Key Features
 - **Auto-Advance Engine**: Automatically queues and progresses rounds as attempts are marked.
-- **Sudden Death Mode**: High-stakes sole-survivor frontier rounds with dynamic banners.
+- **Sudden Death Mode**: High-stakes sole-survivor frontier rounds with dynamic banners and siren beacons.
+- **Automatic Competition Completion Prompt**: Instantly prompts the teacher/referee to download finalized standings and attempt logs as CSV once a round or flight finishes.
 - **Projector Mode**: Fullscreen optimized display for gymnasiums, projectors, and classroom smartboards.
-- **Synthesized Audio Engine**: Browser-synthesized Web Audio FX for passes, fails, advances, alerts, and crowning ceremonies.
+- **Live Soundpacks**: 4 selectable browser-synthesized audio themes with volume and mute control.
 - **CSV Data Hub**: Live import/export compatible with grading spreadsheets and competition logs.
 - **Quick Roster Loader**: Paste rosters per block or period directly into the queue.
 - **Hotkeys**:
@@ -17,7 +37,7 @@ Classroom robotics tournament controller and drag race / gap traversal flight da
 
 ## GitHub Pages Deployment
 
-This project is a zero-dependency static web application and is ready for GitHub Pages:
+This project is a zero-dependency static web application ready for GitHub Pages:
 
 ### Method 1: GitHub Actions (Configured)
 1. Push this repository to GitHub on branch `main`.

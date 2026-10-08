@@ -1,0 +1,120 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .btn-nav {
+    @apply px-3 py-1.5 rounded-lg bg-arena-850 hover:bg-slate-800 text-slate-200 border border-arena-border text-xs sm:text-sm font-medium flex items-center gap-1.5 transition select-none;
+  }
+  .btn-primary {
+    @apply px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-display font-bold shadow-lg shadow-cyan-500/20 active:scale-95 transition select-none;
+  }
+  .btn-success {
+    @apply px-4 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500 text-emerald-300 hover:text-black border border-emerald-500/40 font-display font-bold active:scale-95 transition select-none;
+  }
+  .btn-danger {
+    @apply px-4 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/40 font-display font-bold active:scale-95 transition select-none;
+  }
+  .card {
+    @apply bg-arena-900 border border-arena-border rounded-2xl p-5 shadow-xl;
+  }
+  .modal-overlay {
+    @apply fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 hidden;
+  }
+  .modal-content {
+    @apply bg-arena-900 border border-arena-border rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[92vh];
+  }
+  .input-field {
+    @apply w-full bg-arena-950 border border-arena-border rounded-xl px-4 py-2 text-sm font-mono text-white focus:outline-none focus:border-cyan-500 disabled:opacity-50;
+  }
+}
+
+body {
+  background-color: #070b14;
+  color: #e2e8f0;
+}
+
+.bg-grid {
+  background-size: 32px 32px;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0b1120;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e3052;
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334e80;
+}
+
+/* Projector Mode Styling */
+:fullscreen header,
+:fullscreen footer {
+  display: none !important;
+}
+:fullscreen main {
+  padding-top: 1rem !important;
+  max-width: 100% !important;
+}
+body.projector-mode {
+  background-color: #000 !important;
+  font-size: 1.15rem;
+}
+body.projector-mode .projector-target {
+  font-size: 5rem !important;
+}
+body.projector-mode .projector-card {
+  border-width: 2px;
+  border-color: #00f0ff !important;
+  background-color: #020611 !important;
+}
+
+/* Screen Shake Overlay Effect */
+@keyframes screenShakeAnim {
+  0% { transform: translate(0, 0); }
+  20% { transform: translate(-4px, 3px); }
+  40% { transform: translate(4px, -3px); }
+  60% { transform: translate(-3px, 2px); }
+  80% { transform: translate(3px, -1px); }
+  100% { transform: translate(0, 0); }
+}
+.shake-effect {
+  animation: screenShakeAnim 0.35s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+/* Countdown Bar */
+@keyframes countdownBar {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+.animate-countdown {
+  animation: countdownBar 2s linear forwards;
+}
+
+/* Apex Record Golden Flash */
+@keyframes goldFlashAnim {
+  0% { opacity: 0; }
+  25% { opacity: 0.85; }
+  100% { opacity: 0; }
+}
+.gold-flash {
+  animation: goldFlashAnim 0.8s ease-out forwards;
+}
+
+/* Sudden Death Warning Beacon */
+@keyframes sirenPulse {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.65; }
+}
+.siren-active {
+  animation: sirenPulse 1.2s ease-in-out infinite;
+}
