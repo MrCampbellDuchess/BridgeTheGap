@@ -1,6 +1,6 @@
 /**
- * Bridge the Gap Arena — UI Renderer & Event Controller
- * Modular controller managing DOM elements, rendering pipelines, modal workflows, and hotkeys
+ * Bridge the Gap Arena — UI Renderer & Flight Event Controller
+ * Modern HTML5 <dialog> API, Telemetry Display, Queue Controller & Hotkeys
  */
 window.Arena = window.Arena || {};
 
@@ -8,6 +8,29 @@ window.Arena.UI = (function () {
   const State = window.Arena.State;
   const Audio = window.Arena.Audio;
   const Overlays = window.Arena.Overlays;
+
+  // Dialog Helper Handlers
+  function openModal(id) {
+    const dlg = document.getElementById(id);
+    if (dlg) {
+      if (typeof dlg.showModal === 'function') {
+        if (!dlg.open) dlg.showModal();
+      } else {
+        dlg.classList.remove('hidden');
+      }
+    }
+  }
+
+  function closeModal(id) {
+    const dlg = document.getElementById(id);
+    if (dlg) {
+      if (typeof dlg.close === 'function') {
+        if (dlg.open) dlg.close();
+      } else {
+        dlg.classList.add('hidden');
+      }
+    }
+  }
 
   function clearAutoTimer() {
     if (State.tmr) clearTimeout(State.tmr);
@@ -136,7 +159,6 @@ window.Arena.UI = (function () {
   }
 
   function crownChampion(bot, isRecord) {
-    const crownModal = document.getElementById('modalCrown');
     const crownName = document.getElementById('crownName');
     const crownDist = document.getElementById('crownDist');
     const crownStatus = document.getElementById('crownStatus');
@@ -146,9 +168,9 @@ window.Arena.UI = (function () {
     if (crownDist) crownDist.innerText = bot.max + 'cm';
     if (crownStatus) crownStatus.innerText = isRecord ? 'APEX RECORD' : 'CHAMPION';
 
-    if (crownModal) crownModal.classList.remove('hidden');
     if (banner) banner.classList.remove('hidden');
 
+    openModal('modalCrown');
     Audio.crown();
     Overlays.confettiCelebration(3500);
 
@@ -279,36 +301,36 @@ window.Arena.UI = (function () {
         qList.forEach((x, i) => {
           const cur = x.atts.find(a => a.dist === State.cfg.gap && a.res !== 'READY');
           const bdg = x.fail
-            ? `<span class="text-[10px] bg-rose-950 text-rose-300 px-2 rounded">ELIM at ${x.fDist}cm</span>`
+            ? `<span class="text-[10px] bg-rose-950/80 border border-rose-800 text-rose-300 px-2 py-0.5 rounded font-mono">ELIM at ${x.fDist}cm</span>`
             : cur
-            ? `<span class="text-[10px] bg-emerald-950 text-emerald-300 px-2 rounded">CLEARED ${State.cfg.gap}cm</span>`
-            : `<span class="text-[10px] bg-amber-950 text-amber-300 px-2 rounded animate-pulse">Up to Span (${State.cfg.gap}cm)</span>`;
+            ? `<span class="text-[10px] bg-emerald-950/80 border border-emerald-800 text-emerald-300 px-2 py-0.5 rounded font-mono">CLEARED ${State.cfg.gap}cm</span>`
+            : `<span class="text-[10px] bg-amber-950/80 border border-amber-800 text-amber-300 px-2 py-0.5 rounded font-mono animate-pulse">Up to Span (${State.cfg.gap}cm)</span>`;
           const topClass =
             i === 0 && State.cfg.qFilt === 'active' && !x.fail
-              ? 'ring-2 ring-cyan-500 shadow-[0_0_15px_rgba(0,240,255,0.2)]'
+              ? 'ring-2 ring-cyan-400 shadow-[0_0_20px_rgba(0,240,255,0.25)]'
               : '';
 
           let html = `
             <div class="bg-arena-950 border border-arena-border p-4 rounded-xl flex flex-col sm:flex-row justify-between gap-3 ${topClass}">
               <div>
-                <div class="flex items-center gap-2"><b class="text-white">${x.name}</b>${bdg}</div>
-                <div class="text-xs text-slate-400 mt-1">Best: <b class="text-emerald-400">${x.max}cm</b></div>
+                <div class="flex items-center gap-2"><b class="text-white text-base">${x.name}</b>${bdg}</div>
+                <div class="text-xs text-slate-400 mt-1 font-mono">Best Span: <b class="text-emerald-400">${x.max}cm</b></div>
               </div>
               <div class="flex gap-2">
           `;
 
           if (!x.fail) {
             html += `
-              <button onclick="Arena.UI.logAttempt('${x.name}', ${State.cfg.gap}, 'PASS')" class="px-3 py-1.5 rounded bg-emerald-900/50 hover:bg-emerald-500 text-emerald-300 hover:text-black font-bold text-xs transition">✓ Clear</button>
-              <button onclick="Arena.UI.logAttempt('${x.name}', ${State.cfg.gap}, 'FAIL')" class="px-3 py-1.5 rounded bg-rose-900/50 hover:bg-rose-500 text-rose-300 hover:text-white font-bold text-xs transition">✗ Fail</button>
+              <button onclick="Arena.UI.logAttempt('${x.name}', ${State.cfg.gap}, 'PASS')" class="px-3.5 py-1.5 rounded-lg bg-emerald-950/60 hover:bg-emerald-500 border border-emerald-600/50 text-emerald-300 hover:text-black font-bold text-xs transition">✓ Clear</button>
+              <button onclick="Arena.UI.logAttempt('${x.name}', ${State.cfg.gap}, 'FAIL')" class="px-3.5 py-1.5 rounded-lg bg-rose-950/60 hover:bg-rose-500 border border-rose-600/50 text-rose-300 hover:text-white font-bold text-xs transition">✗ Fail</button>
             `;
           } else {
             html += `
-              <button onclick="Arena.UI.undoFail('${x.name}')" class="px-2 py-1 rounded bg-slate-800 text-[10px] text-slate-300">Undo</button>
+              <button onclick="Arena.UI.undoFail('${x.name}')" class="px-2.5 py-1 rounded bg-slate-800 text-[10px] text-slate-300 border border-slate-700 hover:bg-slate-700">Undo</button>
             `;
           }
           html += `
-              <button onclick="Arena.UI.removeBot('${x.name}')" class="px-2 py-1 text-slate-500 hover:text-rose-400">✕</button>
+              <button onclick="Arena.UI.removeBot('${x.name}')" class="px-2.5 py-1 text-slate-500 hover:text-rose-400 font-bold">✕</button>
             </div>
           </div>`;
           qc.innerHTML += html;
@@ -320,8 +342,8 @@ window.Arena.UI = (function () {
     document.querySelectorAll('.q-btn').forEach(btn => {
       btn.className =
         btn.dataset.q === State.cfg.qFilt
-          ? 'q-btn px-3 py-1 rounded bg-arena-800 text-white'
-          : 'q-btn px-3 py-1 rounded text-slate-400';
+          ? 'q-btn px-3 py-1 rounded bg-arena-800 text-white font-bold'
+          : 'q-btn px-3 py-1 rounded text-slate-400 hover:text-slate-200';
     });
 
     // Sudden Death Banner
@@ -389,8 +411,8 @@ window.Arena.UI = (function () {
           const avg = clr.length ? clr.reduce((acc, x) => acc + x.max, 0) / clr.length : 0;
           pAvg.push({ p: `P${i}`, a: avg, c: colors[i - 1] });
           cg.innerHTML += `
-            <div class="bg-black/30 p-2 border border-arena-border rounded-xl">
-              <div class="text-[10px] text-slate-400">P${i}</div>
+            <div class="bg-black/40 p-2.5 border border-arena-border rounded-xl">
+              <div class="text-[10px] text-slate-400 font-mono">P${i}</div>
               <div class="text-xl font-display font-bold text-white">${avg.toFixed(1)}</div>
             </div>`;
         }
@@ -424,11 +446,11 @@ window.Arena.UI = (function () {
     const mh = document.getElementById('matrixHead');
     const mb = document.getElementById('matrixBody');
     if (mh && mb) {
-      mh.innerHTML = `<tr><th class="p-2 sticky left-0 bg-arena-900 z-10">Robot</th>${dists
+      mh.innerHTML = `<tr><th class="p-2.5 sticky left-0 bg-arena-900 z-10 font-display">Robot</th>${dists
         .map(
           d =>
-            `<th class="p-2 text-center ${
-              d === State.cfg.gap && mScope === 'current' ? 'text-cyan-400' : ''
+            `<th class="p-2 text-center font-mono ${
+              d === State.cfg.gap && mScope === 'current' ? 'text-cyan-400 font-bold' : ''
             }">${d}</th>`
         )
         .join('')}</tr>`;
@@ -437,13 +459,13 @@ window.Arena.UI = (function () {
         mBots
           .map(
             x => `<tr>
-              <td class="p-2 sticky left-0 bg-arena-950 z-10 truncate max-w-[120px] ${
-                x.fail ? 'text-slate-500' : ''
+              <td class="p-2.5 sticky left-0 bg-arena-950 z-10 truncate max-w-[140px] font-bold ${
+                x.fail ? 'text-slate-500' : 'text-slate-200'
               }">${x.name}</td>
               ${dists
                 .map(d => {
                   const a = x.atts.find(y => y.dist === d && y.res !== 'READY');
-                  return `<td class="p-1 text-center ${
+                  return `<td class="p-1 text-center font-mono ${
                     d === State.cfg.gap && mScope === 'current' ? 'bg-cyan-500/10' : ''
                   }">${
                     a
@@ -477,8 +499,8 @@ window.Arena.UI = (function () {
     document.querySelectorAll('.s-btn').forEach(btn => {
       btn.className =
         btn.dataset.s === State.cfg.sFilt
-          ? 's-btn px-2 py-1 rounded bg-arena-800 text-white'
-          : 's-btn px-2 py-1 rounded text-slate-400';
+          ? 's-btn px-2.5 py-1 rounded bg-arena-800 text-white font-bold'
+          : 's-btn px-2.5 py-1 rounded text-slate-400 hover:text-slate-200';
     });
 
     const sb = document.getElementById('standingsBody');
@@ -488,7 +510,7 @@ window.Arena.UI = (function () {
           .map((x, i) => {
             const rBdg =
               x.max === 0
-                ? '<span class="text-[10px] bg-rose-900 text-rose-300 px-1 rounded">DNF</span>'
+                ? '<span class="text-[10px] bg-rose-900/60 border border-rose-800 text-rose-300 px-1 rounded">DNF</span>'
                 : i === 0
                 ? '🥇'
                 : i === 1
@@ -498,21 +520,21 @@ window.Arena.UI = (function () {
                 : i + 1;
             const pct = rec.d > 0 ? Math.min(100, Math.round((x.max / rec.d) * 100)) : 0;
             return `<tr>
-              <td class="p-2 text-center">${rBdg}</td>
-              <td class="p-2 font-bold ${x.fail ? 'text-slate-500' : ''}">
+              <td class="p-2.5 text-center font-mono font-bold">${rBdg}</td>
+              <td class="p-2.5 font-bold ${x.fail ? 'text-slate-500' : 'text-slate-100'}">
                 ${x.name} ${x.max >= rec.d && x.max > 0 ? '👑' : ''}
               </td>
-              <td class="p-2 text-center" style="display:${
+              <td class="p-2.5 text-center" style="display:${
                 State.cfg.nPer === 1 && sScope === 'block' ? 'none' : 'table-cell'
               }">
-                <span class="text-[10px] bg-slate-800 px-1 rounded">${x.per.replace('Period ', 'P')}</span>
+                <span class="text-[10px] bg-slate-800 border border-slate-700 px-1.5 py-0.5 rounded font-mono">${x.per.replace('Period ', 'P')}</span>
               </td>
-              <td class="p-2">
-                <div class="w-full bg-arena-950 h-1.5 rounded-full overflow-hidden">
+              <td class="p-2.5">
+                <div class="w-full bg-arena-950 h-2 rounded-full overflow-hidden border border-arena-border">
                   <div class="bg-cyan-500 h-full rounded-full transition-all duration-500" style="width:${pct}%"></div>
                 </div>
               </td>
-              <td class="p-2 text-right font-display text-cyan-400 text-lg">${x.max}</td>
+              <td class="p-2.5 text-right font-display text-cyan-400 text-lg font-bold">${x.max}</td>
             </tr>`;
           })
           .join('') || `<tr><td colspan="5" class="p-4 text-center">No records</td></tr>`;
@@ -556,7 +578,7 @@ window.Arena.UI = (function () {
     render();
   }
 
-  // Modal Openers
+  // Dedicated Openers
   function openSettingsModal() {
     const setPer = document.getElementById('setPer');
     const setInit = document.getElementById('setInit');
@@ -602,8 +624,7 @@ window.Arena.UI = (function () {
       if (el) el.disabled = isLocked;
     });
 
-    const modalSettings = document.getElementById('modalSettings');
-    if (modalSettings) modalSettings.classList.remove('hidden');
+    openModal('modalSettings');
   }
 
   function openPrepareModal() {
@@ -611,8 +632,7 @@ window.Arena.UI = (function () {
     const btnExecWipe = document.getElementById('btnExecWipe');
     if (wipeConf) wipeConf.value = '';
     if (btnExecWipe) btnExecWipe.disabled = true;
-    const modalPrepare = document.getElementById('modalPrepare');
-    if (modalPrepare) modalPrepare.classList.remove('hidden');
+    openModal('modalPrepare');
   }
 
   function openRosterModal() {
@@ -620,36 +640,34 @@ window.Arena.UI = (function () {
     const input = document.getElementById('rosterInput');
     if (target) target.innerText = `Target: ${State.cfg.per} • ${State.cfg.sem}`;
     if (input) input.value = '';
-    const modalRoster = document.getElementById('modalRoster');
-    if (modalRoster) modalRoster.classList.remove('hidden');
+    openModal('modalRoster');
   }
 
   function openCsvModal() {
     const ed = document.getElementById('csvEditor');
     if (ed) ed.value = State.toCSV(State.db);
-    const modalCsv = document.getElementById('modalCsv');
-    if (modalCsv) modalCsv.classList.remove('hidden');
+    openModal('modalCsv');
   }
 
   function openGapModal() {
     const manGap = document.getElementById('manGap');
     if (manGap) manGap.value = State.cfg.gap;
-    const modalGap = document.getElementById('modalGap');
-    if (modalGap) modalGap.classList.remove('hidden');
-  }
-
-  function closeModal(modalId) {
-    const m = document.getElementById(modalId);
-    if (m) m.classList.add('hidden');
+    openModal('modalGap');
   }
 
   function initEventListeners() {
-    // Close modal buttons
-    document.querySelectorAll('.close-modal').forEach(b => {
-      b.onclick = e => {
-        const overlay = e.target.closest('.modal-overlay');
-        if (overlay) overlay.classList.add('hidden');
-      };
+    // Backdrop click-to-close on all native dialogs
+    document.querySelectorAll('dialog').forEach(dlg => {
+      dlg.addEventListener('click', e => {
+        const rect = dlg.getBoundingClientRect();
+        const isInDialog = (
+          rect.top <= e.clientY &&
+          e.clientY <= rect.top + rect.height &&
+          rect.left <= e.clientX &&
+          e.clientX <= rect.left + rect.width
+        );
+        if (!isInDialog) dlg.close();
+      });
     });
 
     // Sound toggle in top navigation
@@ -666,7 +684,7 @@ window.Arena.UI = (function () {
       };
     }
 
-    // Modal triggers in top nav
+    // Modal navigation buttons
     const btnOpenSettingsModal = document.getElementById('btnOpenSettingsModal');
     if (btnOpenSettingsModal) btnOpenSettingsModal.onclick = openSettingsModal;
 
@@ -1069,11 +1087,13 @@ window.Arena.UI = (function () {
     const btnCloseCrown = document.getElementById('btnCloseCrown');
     if (btnCloseCrown) btnCloseCrown.onclick = () => closeModal('modalCrown');
 
-    // Hotkeys: [1] Pass, [2] Fail, [Space] Advance, [Esc] Dismiss
+    // Hotkeys: [1] Pass, [2] Fail, [Space] Advance
     window.addEventListener('keydown', e => {
-      if (document.querySelector('.modal-overlay:not(.hidden)')) {
+      // If a native dialog is currently open, let browser handle Escape naturally
+      const anyOpenDialog = document.querySelector('dialog[open]');
+      if (anyOpenDialog) {
         if (e.key === 'Escape') {
-          document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
+          anyOpenDialog.close();
         }
         return;
       }
@@ -1110,12 +1130,13 @@ window.Arena.UI = (function () {
     selectPeriod,
     clearAutoTimer,
     crownChampion,
+    openModal,
+    closeModal,
     openSettingsModal,
     openPrepareModal,
     openRosterModal,
     openCsvModal,
     openGapModal,
-    closeModal,
     initEventListeners
   };
 })();
