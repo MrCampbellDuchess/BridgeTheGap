@@ -55,10 +55,10 @@
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <button id="btnSoundToggle" class="btn-nav"><span id="soundToggleIcon">🔊</span> FX: ON</button>
-        <button id="btnOpenSettingsModal" class="btn-nav text-amber-300 border-amber-500/40">⚙️ Settings <span id="navSettingsBadge" class="hidden text-[10px] px-1 rounded bg-amber-500/20">🔒</span></button>
-        <button id="btnOpenPrepareModal" class="btn-nav text-rose-300 border-rose-700/60">⚠️ Prepare/Reset</button>
-        <button id="btnOpenBatchRoster" class="btn-nav text-cyan-400">👥 Quick Roster</button>
-        <button id="btnCsvModal" class="btn-nav">💾 CSV Hub</button>
+        <button id="btnOpenSettingsModal" onclick="Arena.UI.openSettingsModal()" class="btn-nav text-amber-300 border-amber-500/40">⚙️ Settings <span id="navSettingsBadge" class="hidden text-[10px] px-1 rounded bg-amber-500/20">🔒</span></button>
+        <button id="btnOpenPrepareModal" onclick="Arena.UI.openPrepareModal()" class="btn-nav text-rose-300 border-rose-700/60">⚠️ Prepare/Reset</button>
+        <button id="btnOpenBatchRoster" onclick="Arena.UI.openRosterModal()" class="btn-nav text-cyan-400">👥 Quick Roster</button>
+        <button id="btnCsvModal" onclick="Arena.UI.openCsvModal()" class="btn-nav">💾 CSV Hub</button>
         <button id="btnToggleProjector" class="btn-nav text-amber-400">📺 Projector</button>
       </div>
     </div>
@@ -144,7 +144,7 @@
           <div class="text-[11px] font-mono text-slate-400 mb-2">Gap Step (<span id="btnAdvLabel">+2cm</span>)</div>
           <div class="flex gap-2">
             <button id="btnAdvance" class="btn-primary">Advance ⏩</button>
-            <button id="btnManualGap" class="px-3 py-2 bg-slate-800 rounded-xl hover:bg-slate-700">⚙️</button>
+            <button id="btnManualGap" onclick="Arena.UI.openGapModal()" class="px-3 py-2 bg-slate-800 rounded-xl hover:bg-slate-700">⚙️</button>
           </div>
         </div>
         <div class="flex flex-col gap-2">
@@ -260,7 +260,7 @@
   <!-- Modals -->
 
   <!-- Coronation Modal -->
-  <div id="modalCrown" class="modal-overlay">
+  <div id="modalCrown" class="modal-overlay hidden">
     <div class="modal-content text-center p-8 border-2 border-amber-500 sudden-death-glow items-center justify-center">
       <div class="text-6xl animate-pulse mb-4">👑</div>
       <div class="text-xs font-mono text-amber-300 font-bold tracking-widest uppercase">CHAMPION CROWNED</div>
@@ -278,17 +278,17 @@
       <div class="mt-6 flex flex-col gap-2 w-full">
         <button id="btnDlResults" class="btn-primary bg-amber-400 hover:bg-amber-300 text-black">📥 Download Final Results CSV</button>
         <button id="btnDlLog" class="btn-nav justify-center">📋 Download Option A Log</button>
-        <button id="btnCloseCrown" class="mt-2 text-slate-400 hover:text-white text-xs font-mono">Return to Board</button>
+        <button id="btnCloseCrown" onclick="Arena.UI.closeModal('modalCrown')" class="mt-2 text-slate-400 hover:text-white text-xs font-mono">Return to Board</button>
       </div>
     </div>
   </div>
 
   <!-- Settings Modal -->
-  <div id="modalSettings" class="modal-overlay">
+  <div id="modalSettings" class="modal-overlay hidden">
     <div class="modal-content">
       <div class="p-4 border-b border-arena-border flex justify-between items-center">
         <h3 class="font-display font-bold text-white">⚙️ Arena Settings</h3>
-        <button class="close-modal text-slate-400 hover:text-white text-xl">&times;</button>
+        <button onclick="Arena.UI.closeModal('modalSettings')" class="close-modal text-slate-400 hover:text-white text-xl cursor-pointer">&times;</button>
       </div>
       <div class="p-5 space-y-4 overflow-y-auto">
         <div id="setLockBanner" class="hidden p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs text-amber-300">
@@ -377,11 +377,11 @@
   </div>
 
   <!-- Prepare / Wipe Modal -->
-  <div id="modalPrepare" class="modal-overlay">
+  <div id="modalPrepare" class="modal-overlay hidden">
     <div class="modal-content">
       <div class="p-4 border-b border-arena-border flex justify-between items-center">
         <h3 class="font-display font-bold text-rose-400">⚠️ Prepare Arena / Wipe Data</h3>
-        <button class="close-modal text-slate-400 hover:text-white text-xl">&times;</button>
+        <button onclick="Arena.UI.closeModal('modalPrepare')" class="close-modal text-slate-400 hover:text-white text-xl cursor-pointer">&times;</button>
       </div>
       <div class="p-5 space-y-4">
         <button id="btnDlBackup" class="w-full btn-nav justify-center bg-amber-500/20 text-amber-300 border-amber-500/40 py-2">
@@ -415,11 +415,11 @@
   </div>
 
   <!-- Batch Roster Modal -->
-  <div id="modalRoster" class="modal-overlay">
+  <div id="modalRoster" class="modal-overlay hidden">
     <div class="modal-content">
       <div class="p-4 border-b border-arena-border flex justify-between items-center">
         <h3 class="font-display font-bold text-white">👥 Quick Roster Loader</h3>
-        <button class="close-modal text-slate-400 hover:text-white text-xl">&times;</button>
+        <button onclick="Arena.UI.closeModal('modalRoster')" class="close-modal text-slate-400 hover:text-white text-xl cursor-pointer">&times;</button>
       </div>
       <div class="p-5 space-y-2">
         <div class="text-xs font-mono text-cyan-300 mb-2" id="rosterTarget">Target: Block</div>
@@ -432,11 +432,11 @@
   </div>
 
   <!-- CSV Hub Modal -->
-  <div id="modalCsv" class="modal-overlay">
+  <div id="modalCsv" class="modal-overlay hidden">
     <div class="modal-content max-w-3xl">
       <div class="p-4 border-b border-arena-border flex justify-between items-center">
         <h3 class="font-display font-bold text-white">💾 CSV Hub</h3>
-        <button class="close-modal text-slate-400 hover:text-white text-xl">&times;</button>
+        <button onclick="Arena.UI.closeModal('modalCsv')" class="close-modal text-slate-400 hover:text-white text-xl cursor-pointer">&times;</button>
       </div>
       <div class="p-5 space-y-3 flex-1 flex flex-col">
         <div class="flex gap-2 text-xs font-mono">
@@ -453,13 +453,13 @@
   </div>
 
   <!-- Manual Gap Modal -->
-  <div id="modalGap" class="modal-overlay">
+  <div id="modalGap" class="modal-overlay hidden">
     <div class="modal-content max-w-xs">
       <div class="p-5 space-y-4">
         <h3 class="font-display font-bold text-white text-center">Adjust Gap (cm)</h3>
         <input type="number" id="manGap" class="input-field text-3xl font-display font-bold text-center text-cyan-400">
         <div class="flex gap-2">
-          <button class="close-modal flex-1 btn-nav justify-center">Cancel</button>
+          <button onclick="Arena.UI.closeModal('modalGap')" class="close-modal flex-1 btn-nav justify-center">Cancel</button>
           <button id="btnSaveManGap" class="flex-1 btn-primary py-2 text-center justify-center">Update</button>
         </div>
       </div>

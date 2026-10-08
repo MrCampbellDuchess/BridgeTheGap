@@ -316,7 +316,7 @@ window.Arena.UI = (function () {
       }
     }
 
-    // Queue filter button styling
+    // Queue filter buttons
     document.querySelectorAll('.q-btn').forEach(btn => {
       btn.className =
         btn.dataset.q === State.cfg.qFilt
@@ -556,12 +556,100 @@ window.Arena.UI = (function () {
     render();
   }
 
+  // Modal Openers
+  function openSettingsModal() {
+    const setPer = document.getElementById('setPer');
+    const setInit = document.getElementById('setInit');
+    const setStep = document.getElementById('setStep');
+    const setSem = document.getElementById('setSem');
+    const setAutoAdv = document.getElementById('setAutoAdv');
+    const setSnd = document.getElementById('setSnd');
+    const setVol = document.getElementById('setVol');
+    const setVolLabel = document.getElementById('setVolLabel');
+    const setSoundpack = document.getElementById('setSoundpack');
+    const setPromptCsv = document.getElementById('setPromptCsv');
+    const setBDist = document.getElementById('setBDist');
+    const setBName = document.getElementById('setBName');
+    const bmCustom = document.getElementById('bmCustom');
+    const bmAuto = document.getElementById('bmAuto');
+    const setLockBanner = document.getElementById('setLockBanner');
+
+    if (setPer) setPer.value = State.cfg.nPer;
+    if (setInit) setInit.value = State.cfg.init;
+    if (setStep) setStep.value = State.cfg.step;
+    if (setSem) setSem.value = State.cfg.sem;
+    if (setAutoAdv) setAutoAdv.checked = State.cfg.auto;
+    if (setSnd) setSnd.checked = State.cfg.sOn;
+    if (setVol) setVol.value = State.cfg.sVol;
+    if (setVolLabel) setVolLabel.innerText = State.cfg.sVol + '%';
+    if (setSoundpack) setSoundpack.value = State.cfg.soundpack || 'cyber';
+    if (setPromptCsv) setPromptCsv.checked = State.cfg.promptCsvOnEnd !== false;
+
+    if (State.cfg.bMode === 'custom') {
+      if (bmCustom) bmCustom.checked = true;
+    } else {
+      if (bmAuto) bmAuto.checked = true;
+    }
+    if (setBDist) setBDist.value = State.cfg.bDist;
+    if (setBName) setBName.value = State.cfg.bName;
+
+    const isLocked = State.db.some(
+      x => x.sem === State.cfg.sem && x.per === State.cfg.per && x.res !== 'READY'
+    );
+    if (setLockBanner) setLockBanner.style.display = isLocked ? 'block' : 'none';
+    ['setPer', 'setInit', 'setStep'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.disabled = isLocked;
+    });
+
+    const modalSettings = document.getElementById('modalSettings');
+    if (modalSettings) modalSettings.classList.remove('hidden');
+  }
+
+  function openPrepareModal() {
+    const wipeConf = document.getElementById('wipeConf');
+    const btnExecWipe = document.getElementById('btnExecWipe');
+    if (wipeConf) wipeConf.value = '';
+    if (btnExecWipe) btnExecWipe.disabled = true;
+    const modalPrepare = document.getElementById('modalPrepare');
+    if (modalPrepare) modalPrepare.classList.remove('hidden');
+  }
+
+  function openRosterModal() {
+    const target = document.getElementById('rosterTarget');
+    const input = document.getElementById('rosterInput');
+    if (target) target.innerText = `Target: ${State.cfg.per} • ${State.cfg.sem}`;
+    if (input) input.value = '';
+    const modalRoster = document.getElementById('modalRoster');
+    if (modalRoster) modalRoster.classList.remove('hidden');
+  }
+
+  function openCsvModal() {
+    const ed = document.getElementById('csvEditor');
+    if (ed) ed.value = State.toCSV(State.db);
+    const modalCsv = document.getElementById('modalCsv');
+    if (modalCsv) modalCsv.classList.remove('hidden');
+  }
+
+  function openGapModal() {
+    const manGap = document.getElementById('manGap');
+    if (manGap) manGap.value = State.cfg.gap;
+    const modalGap = document.getElementById('modalGap');
+    if (modalGap) modalGap.classList.remove('hidden');
+  }
+
+  function closeModal(modalId) {
+    const m = document.getElementById(modalId);
+    if (m) m.classList.add('hidden');
+  }
+
   function initEventListeners() {
-    // Modal close buttons
+    // Close modal buttons
     document.querySelectorAll('.close-modal').forEach(b => {
-      b.addEventListener('click', e =>
-        e.target.closest('.modal-overlay').classList.add('hidden')
-      );
+      b.onclick = e => {
+        const overlay = e.target.closest('.modal-overlay');
+        if (overlay) overlay.classList.add('hidden');
+      };
     });
 
     // Sound toggle in top navigation
@@ -578,59 +666,20 @@ window.Arena.UI = (function () {
       };
     }
 
-    // Settings Modal
+    // Modal triggers in top nav
     const btnOpenSettingsModal = document.getElementById('btnOpenSettingsModal');
-    if (btnOpenSettingsModal) {
-      btnOpenSettingsModal.onclick = () => {
-        const setPer = document.getElementById('setPer');
-        const setInit = document.getElementById('setInit');
-        const setStep = document.getElementById('setStep');
-        const setSem = document.getElementById('setSem');
-        const setAutoAdv = document.getElementById('setAutoAdv');
-        const setSnd = document.getElementById('setSnd');
-        const setVol = document.getElementById('setVol');
-        const setVolLabel = document.getElementById('setVolLabel');
-        const setSoundpack = document.getElementById('setSoundpack');
-        const setPromptCsv = document.getElementById('setPromptCsv');
-        const setBDist = document.getElementById('setBDist');
-        const setBName = document.getElementById('setBName');
-        const bmCustom = document.getElementById('bmCustom');
-        const bmAuto = document.getElementById('bmAuto');
-        const setLockBanner = document.getElementById('setLockBanner');
+    if (btnOpenSettingsModal) btnOpenSettingsModal.onclick = openSettingsModal;
 
-        if (setPer) setPer.value = State.cfg.nPer;
-        if (setInit) setInit.value = State.cfg.init;
-        if (setStep) setStep.value = State.cfg.step;
-        if (setSem) setSem.value = State.cfg.sem;
-        if (setAutoAdv) setAutoAdv.checked = State.cfg.auto;
-        if (setSnd) setSnd.checked = State.cfg.sOn;
-        if (setVol) setVol.value = State.cfg.sVol;
-        if (setVolLabel) setVolLabel.innerText = State.cfg.sVol + '%';
-        if (setSoundpack) setSoundpack.value = State.cfg.soundpack || 'cyber';
-        if (setPromptCsv) setPromptCsv.checked = State.cfg.promptCsvOnEnd !== false;
+    const btnOpenPrepareModal = document.getElementById('btnOpenPrepareModal');
+    if (btnOpenPrepareModal) btnOpenPrepareModal.onclick = openPrepareModal;
 
-        if (State.cfg.bMode === 'custom') {
-          if (bmCustom) bmCustom.checked = true;
-        } else {
-          if (bmAuto) bmAuto.checked = true;
-        }
-        if (setBDist) setBDist.value = State.cfg.bDist;
-        if (setBName) setBName.value = State.cfg.bName;
+    const btnOpenBatchRoster = document.getElementById('btnOpenBatchRoster');
+    if (btnOpenBatchRoster) btnOpenBatchRoster.onclick = openRosterModal;
 
-        const isLocked = State.db.some(
-          x => x.sem === State.cfg.sem && x.per === State.cfg.per && x.res !== 'READY'
-        );
-        if (setLockBanner) setLockBanner.style.display = isLocked ? 'block' : 'none';
-        ['setPer', 'setInit', 'setStep'].forEach(id => {
-          const el = document.getElementById(id);
-          if (el) el.disabled = isLocked;
-        });
+    const btnCsvModal = document.getElementById('btnCsvModal');
+    if (btnCsvModal) btnCsvModal.onclick = openCsvModal;
 
-        const modalSettings = document.getElementById('modalSettings');
-        if (modalSettings) modalSettings.classList.remove('hidden');
-      };
-    }
-
+    // Volume input slider
     const setVol = document.getElementById('setVol');
     if (setVol) {
       setVol.oninput = e => {
@@ -639,6 +688,7 @@ window.Arena.UI = (function () {
       };
     }
 
+    // Settings save button
     const btnSaveSet = document.getElementById('btnSaveSet');
     if (btnSaveSet) {
       btnSaveSet.onclick = () => {
@@ -674,23 +724,12 @@ window.Arena.UI = (function () {
 
         State.save();
         render();
-        document.getElementById('modalSettings').classList.add('hidden');
+        closeModal('modalSettings');
         Overlays.showToast('Settings Saved', '⚙️');
       };
     }
 
-    // Wipe Modal
-    const btnOpenPrepareModal = document.getElementById('btnOpenPrepareModal');
-    if (btnOpenPrepareModal) {
-      btnOpenPrepareModal.onclick = () => {
-        const wipeConf = document.getElementById('wipeConf');
-        const btnExecWipe = document.getElementById('btnExecWipe');
-        if (wipeConf) wipeConf.value = '';
-        if (btnExecWipe) btnExecWipe.disabled = true;
-        document.getElementById('modalPrepare').classList.remove('hidden');
-      };
-    }
-
+    // Wipe modal confirmation input
     const wipeConf = document.getElementById('wipeConf');
     if (wipeConf) {
       wipeConf.oninput = e => {
@@ -735,23 +774,12 @@ window.Arena.UI = (function () {
         }
         State.save();
         render();
-        document.getElementById('modalPrepare').classList.add('hidden');
+        closeModal('modalPrepare');
         Overlays.showToast('Data Cleared', '🧹');
       };
     }
 
-    // Quick Roster Modal
-    const btnOpenBatchRoster = document.getElementById('btnOpenBatchRoster');
-    if (btnOpenBatchRoster) {
-      btnOpenBatchRoster.onclick = () => {
-        const target = document.getElementById('rosterTarget');
-        const input = document.getElementById('rosterInput');
-        if (target) target.innerText = `Target: ${State.cfg.per} • ${State.cfg.sem}`;
-        if (input) input.value = '';
-        document.getElementById('modalRoster').classList.remove('hidden');
-      };
-    }
-
+    // Load roster button
     const btnLoadRoster = document.getElementById('btnLoadRoster');
     if (btnLoadRoster) {
       btnLoadRoster.onclick = () => {
@@ -783,21 +811,12 @@ window.Arena.UI = (function () {
 
         State.save();
         render();
-        document.getElementById('modalRoster').classList.add('hidden');
+        closeModal('modalRoster');
         Overlays.showToast(`Loaded ${names.length} robots`, '👥');
       };
     }
 
-    // CSV Hub Modal
-    const btnCsvModal = document.getElementById('btnCsvModal');
-    if (btnCsvModal) {
-      btnCsvModal.onclick = () => {
-        const ed = document.getElementById('csvEditor');
-        if (ed) ed.value = State.toCSV(State.db);
-        document.getElementById('modalCsv').classList.remove('hidden');
-      };
-    }
-
+    // CSV Hub actions
     const btnCsvClean = document.getElementById('btnCsvClean');
     if (btnCsvClean) {
       btnCsvClean.onclick = () => {
@@ -838,7 +857,7 @@ window.Arena.UI = (function () {
           State.db = State.parseCSV(ed.value);
           State.save();
           render();
-          document.getElementById('modalCsv').classList.add('hidden');
+          closeModal('modalCsv');
           Overlays.showToast('Data Applied', '💾');
         } catch (e) {
           Overlays.showToast('Parse Error', '❌');
@@ -892,12 +911,7 @@ window.Arena.UI = (function () {
 
     // Manual Gap Modal
     const btnManualGap = document.getElementById('btnManualGap');
-    if (btnManualGap) {
-      btnManualGap.onclick = () => {
-        document.getElementById('manGap').value = State.cfg.gap;
-        document.getElementById('modalGap').classList.remove('hidden');
-      };
-    }
+    if (btnManualGap) btnManualGap.onclick = openGapModal;
 
     const btnSaveManGap = document.getElementById('btnSaveManGap');
     if (btnSaveManGap) {
@@ -907,7 +921,7 @@ window.Arena.UI = (function () {
           State.cfg.gap = v;
           State.save();
           render();
-          document.getElementById('modalGap').classList.add('hidden');
+          closeModal('modalGap');
           Overlays.showToast('Gap updated', '⚙️');
         }
       };
@@ -983,7 +997,7 @@ window.Arena.UI = (function () {
       };
     }
 
-    // Change listeners for controls
+    // Select change listeners
     const selSemester = document.getElementById('selSemester');
     if (selSemester) {
       selSemester.onchange = e => {
@@ -1039,33 +1053,21 @@ window.Arena.UI = (function () {
       };
     }
 
-    // Standings & Log CSV download buttons
+    // CSV Download buttons
     const btnDlResults = document.getElementById('btnDlResults');
-    if (btnDlResults) {
-      btnDlResults.onclick = () => State.downloadStandingsCSV();
-    }
+    if (btnDlResults) btnDlResults.onclick = () => State.downloadStandingsCSV();
 
     const bannerDownloadResultsBtn = document.getElementById('bannerDownloadResultsBtn');
-    if (bannerDownloadResultsBtn) {
-      bannerDownloadResultsBtn.onclick = () => State.downloadStandingsCSV();
-    }
+    if (bannerDownloadResultsBtn) bannerDownloadResultsBtn.onclick = () => State.downloadStandingsCSV();
 
     const btnDlLog = document.getElementById('btnDlLog');
-    if (btnDlLog) {
-      btnDlLog.onclick = () => State.downloadAttemptLogCSV();
-    }
+    if (btnDlLog) btnDlLog.onclick = () => State.downloadAttemptLogCSV();
 
     const bannerDownloadLogBtn = document.getElementById('bannerDownloadLogBtn');
-    if (bannerDownloadLogBtn) {
-      bannerDownloadLogBtn.onclick = () => State.downloadAttemptLogCSV();
-    }
+    if (bannerDownloadLogBtn) bannerDownloadLogBtn.onclick = () => State.downloadAttemptLogCSV();
 
     const btnCloseCrown = document.getElementById('btnCloseCrown');
-    if (btnCloseCrown) {
-      btnCloseCrown.onclick = () => {
-        document.getElementById('modalCrown').classList.add('hidden');
-      };
-    }
+    if (btnCloseCrown) btnCloseCrown.onclick = () => closeModal('modalCrown');
 
     // Hotkeys: [1] Pass, [2] Fail, [Space] Advance, [Esc] Dismiss
     window.addEventListener('keydown', e => {
@@ -1108,6 +1110,12 @@ window.Arena.UI = (function () {
     selectPeriod,
     clearAutoTimer,
     crownChampion,
+    openSettingsModal,
+    openPrepareModal,
+    openRosterModal,
+    openCsvModal,
+    openGapModal,
+    closeModal,
     initEventListeners
   };
 })();

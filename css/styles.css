@@ -1,34 +1,9 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* ==========================================================================
+   Bridge the Gap Arena — Pure Standard CSS Stylesheet
+   Zero-build, 100% browser-native compatible
+   ========================================================================== */
 
-@layer components {
-  .btn-nav {
-    @apply px-3 py-1.5 rounded-lg bg-arena-850 hover:bg-slate-800 text-slate-200 border border-arena-border text-xs sm:text-sm font-medium flex items-center gap-1.5 transition select-none;
-  }
-  .btn-primary {
-    @apply px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-display font-bold shadow-lg shadow-cyan-500/20 active:scale-95 transition select-none;
-  }
-  .btn-success {
-    @apply px-4 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500 text-emerald-300 hover:text-black border border-emerald-500/40 font-display font-bold active:scale-95 transition select-none;
-  }
-  .btn-danger {
-    @apply px-4 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/40 font-display font-bold active:scale-95 transition select-none;
-  }
-  .card {
-    @apply bg-arena-900 border border-arena-border rounded-2xl p-5 shadow-xl;
-  }
-  .modal-overlay {
-    @apply fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 hidden;
-  }
-  .modal-content {
-    @apply bg-arena-900 border border-arena-border rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[92vh];
-  }
-  .input-field {
-    @apply w-full bg-arena-950 border border-arena-border rounded-xl px-4 py-2 text-sm font-mono text-white focus:outline-none focus:border-cyan-500 disabled:opacity-50;
-  }
-}
-
+/* Base & Reset */
 body {
   background-color: #070b14;
   color: #e2e8f0;
@@ -41,6 +16,7 @@ body {
     linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
 }
 
+/* Custom Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -54,6 +30,155 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #334e80;
+}
+
+/* Component Classes */
+.btn-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.5rem;
+  background-color: #111a2e;
+  color: #e2e8f0;
+  border: 1px solid #1e3052;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+  user-select: none;
+}
+.btn-nav:hover {
+  background-color: #1e293b;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.75rem;
+  background-color: #06b6d4;
+  color: #000000;
+  font-family: "Chakra Petch", sans-serif;
+  font-weight: 700;
+  box-shadow: 0 10px 15px -3px rgba(6, 182, 212, 0.25);
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+  user-select: none;
+}
+.btn-primary:hover {
+  background-color: #22d3ee;
+}
+.btn-primary:active {
+  transform: scale(0.96);
+}
+
+.btn-success {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  font-family: "Chakra Petch", sans-serif;
+  font-weight: 700;
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+  user-select: none;
+}
+.btn-success:hover {
+  background-color: #10b981;
+  color: #000000;
+}
+.btn-success:active {
+  transform: scale(0.96);
+}
+
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  background-color: rgba(244, 63, 94, 0.2);
+  color: #fda4af;
+  border: 1px solid rgba(244, 63, 94, 0.4);
+  font-family: "Chakra Petch", sans-serif;
+  font-weight: 700;
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+  user-select: none;
+}
+.btn-danger:hover {
+  background-color: #f43f5e;
+  color: #ffffff;
+}
+.btn-danger:active {
+  transform: scale(0.96);
+}
+
+.card {
+  background-color: #0b1120;
+  border: 1px solid #1e3052;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+.input-field {
+  width: 100%;
+  background-color: #070b14;
+  border: 1px solid #1e3052;
+  border-radius: 0.75rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-family: "JetBrains Mono", monospace;
+  color: #ffffff;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+.input-field:focus {
+  border-color: #00f0ff;
+}
+.input-field:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Modals */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  padding: 1rem;
+}
+
+.modal-overlay.hidden,
+.hidden {
+  display: none !important;
+}
+
+.modal-content {
+  background-color: #0b1120;
+  border: 1px solid #1e3052;
+  border-radius: 1rem;
+  width: 100%;
+  max-width: 32rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  max-height: 92vh;
+  position: relative;
+  z-index: 51;
 }
 
 /* Projector Mode Styling */
@@ -78,7 +203,7 @@ body.projector-mode .projector-card {
   background-color: #020611 !important;
 }
 
-/* Screen Shake Overlay Effect */
+/* Visual FX Animations */
 @keyframes screenShakeAnim {
   0% { transform: translate(0, 0); }
   20% { transform: translate(-4px, 3px); }
@@ -91,7 +216,6 @@ body.projector-mode .projector-card {
   animation: screenShakeAnim 0.35s cubic-bezier(.36,.07,.19,.97) both;
 }
 
-/* Countdown Bar */
 @keyframes countdownBar {
   from { width: 100%; }
   to { width: 0%; }
@@ -100,7 +224,6 @@ body.projector-mode .projector-card {
   animation: countdownBar 2s linear forwards;
 }
 
-/* Apex Record Golden Flash */
 @keyframes goldFlashAnim {
   0% { opacity: 0; }
   25% { opacity: 0.85; }
@@ -110,11 +233,22 @@ body.projector-mode .projector-card {
   animation: goldFlashAnim 0.8s ease-out forwards;
 }
 
-/* Sudden Death Warning Beacon */
 @keyframes sirenPulse {
   0%, 100% { opacity: 0.15; }
   50% { opacity: 0.65; }
 }
 .siren-active {
   animation: sirenPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% {
+    box-shadow: 0 0 25px -5px rgba(245, 158, 11, 0.6), inset 0 0 20px -5px rgba(244, 63, 94, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 45px 5px rgba(244, 63, 94, 0.7), inset 0 0 35px 2px rgba(244, 63, 94, 0.5);
+  }
+}
+.animate-glow-pulse {
+  animation: glowPulse 2s infinite ease-in-out;
 }
