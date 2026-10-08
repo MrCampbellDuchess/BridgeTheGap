@@ -4,8 +4,8 @@ Classroom robotics tournament controller and drag race / gap traversal flight da
 
 ## Modular Architecture
 The application is structured into decoupled components:
-- **`index.html`**: Clean semantic layout, modal containers, and viewport controls.
-- **`css/styles.css`**: Tailwind classes, custom scrollbars, projector mode styling, and keyframe animations.
+- **`index.html`**: Clean semantic layout, native HTML5 `<dialog>` modals, and viewport controls.
+- **`css/styles.css`**: Standard design tokens, 6 complete theme presets, projector mode styling, and keyframe animations.
 - **`js/audio.js`** (`Arena.Audio`): Live soundpack synthesizer supporting:
   - *Cyber Synth* (default futuristic arena lasers & sweep risers)
   - *8-Bit Retro* (arcade square-wave chiptunes)
@@ -17,9 +17,20 @@ The application is structured into decoupled components:
   - Apex record golden strobe flash
   - Sudden death flashing hazard beacons
   - Competition completion CSV save prompt modal
-- **`js/state.js`** (`Arena.State`): Competition ledger, calculation engine, localStorage persistence, and CSV export/import.
-- **`js/ui.js`** (`Arena.UI`): DOM rendering, queue cards, matrix tables, leaderboard clash analytics, and hotkeys.
+- **`js/state.js`** (`Arena.State`): Competition ledger, calculation engine, localStorage persistence, theme state, and CSV export/import.
+- **`js/ui.js`** (`Arena.UI`): DOM rendering, queue cards, matrix tables, leaderboard clash analytics, dialog openers, and hotkeys.
 - **`js/app.js`** (`Arena.App`): Application bootstrap and coordination.
+
+## 6 Visual Themes
+Change themes on-the-fly inside the **Settings (⚙️)** dialog:
+1. 🌉 **Cyber Arena** (Default): High-voltage neon cyan, electric amber, dark telemetry grid.
+2. 🕹️ **Retro Arcade CRT**: Phosphor green & amber glow with subtle CRT scanline textures.
+3. 🌆 **Synthwave Sunset**: Neon magenta & ultraviolet with sunset horizons.
+4. 🚧 **Industrial Pit Crew**: Safety caution yellow & orange with hazard warning striping.
+5. 🏎️ **Formula Motorsport**: Racing crimson red & carbon fiber with checkered flag accents.
+6. ☀️ **Classroom Daylight**: High-contrast crisp light mode (slate & white) engineered for washed-out classroom projectors in brightly lit rooms.
+
+*Optional*: Toggle **"Auto-Sync Soundpack to Theme"** to automatically pair visual themes with companion audio (e.g., Retro CRT → 8-Bit Retro soundpack).
 
 ## Key Features
 - **Auto-Advance Engine**: Automatically queues and progresses rounds as attempts are marked.
@@ -33,7 +44,7 @@ The application is structured into decoupled components:
   - `1`: Mark current active bot **Pass / Clear**
   - `2`: Mark current active bot **Fail**
   - `Space`: **Advance Gap**
-  - `Esc`: Pause timer / dismiss modal
+  - `Esc`: Dismiss open modal / pause auto-advance timer
 
 ## GitHub Pages Deployment
 

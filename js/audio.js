@@ -181,6 +181,18 @@ window.Arena.Audio = (function () {
     });
   }
 
+  function getCompanionSoundpack(theme) {
+    const map = {
+      cyber: 'cyber',
+      arcade: 'arcade',
+      synthwave: 'cyber',
+      hazard: 'stadium',
+      motorsport: 'stadium',
+      daylight: 'chime'
+    };
+    return map[theme] || 'cyber';
+  }
+
   // Auto-init on first user gesture
   ['click', 'keydown', 'touchstart'].forEach(e =>
     window.addEventListener(e, () => init(), { once: true })
@@ -195,6 +207,7 @@ window.Arena.Audio = (function () {
     alert,
     fanfare,
     crown,
+    getCompanionSoundpack,
     get on() { return on; },
     set on(val) { on = !!val; },
     get vol() { return vol; },

@@ -1,35 +1,164 @@
 /* ==========================================================================
    Bridge the Gap Arena — Modern Flight Controller Design System
-   Modern CSS Architecture: Native <dialog>, Design Tokens, Hardware Overlays
+   6 Complete Visual Themes: Cyber, Arcade, Synthwave, Hazard, Motorsport, Daylight
    ========================================================================== */
 
-:root {
+/* --------------------------------------------------------------------------
+   1. Theme Token Palettes
+   -------------------------------------------------------------------------- */
+
+/* Default: Cyber Arena */
+:root,
+[data-theme="cyber"] {
   --bg-void: #050813;
   --bg-panel: #0a1122;
   --bg-panel-elevated: #101a33;
   --bg-input: #060b17;
+  --text-main: #e2e8f0;
+  --text-muted: #94a3b8;
   --border-subtle: #182847;
   --border-bright: #294375;
   --border-focus: #00f0ff;
   
-  --cyan: #00f0ff;
-  --cyan-dim: #008899;
-  --cyan-glow: rgba(0, 240, 255, 0.25);
-  
-  --amber: #f59e0b;
-  --amber-glow: rgba(245, 158, 11, 0.25);
-  
-  --emerald: #10b981;
-  --emerald-glow: rgba(16, 185, 129, 0.25);
-  
-  --rose: #f43f5e;
-  --rose-glow: rgba(244, 63, 94, 0.25);
+  --primary-accent: #00f0ff;
+  --primary-glow: rgba(0, 240, 255, 0.3);
+  --warning-accent: #f59e0b;
+  --warning-glow: rgba(245, 158, 11, 0.3);
+  --success-accent: #10b981;
+  --success-glow: rgba(16, 185, 129, 0.3);
+  --danger-accent: #f43f5e;
+  --danger-glow: rgba(244, 63, 94, 0.3);
 
-  --font-display: 'Chakra Petch', system-ui, -apple-system, sans-serif;
+  --font-display: 'Chakra Petch', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+  --bg-pattern-opacity: 0.03;
 }
 
-/* Base Viewport */
+/* Theme 2: Retro Arcade CRT */
+[data-theme="arcade"] {
+  --bg-void: #030804;
+  --bg-panel: #061408;
+  --bg-panel-elevated: #0b2210;
+  --bg-input: #020a04;
+  --text-main: #a7f3d0;
+  --text-muted: #34d399;
+  --border-subtle: #14381d;
+  --border-bright: #059669;
+  --border-focus: #10b981;
+  
+  --primary-accent: #10b981;
+  --primary-glow: rgba(16, 185, 129, 0.45);
+  --warning-accent: #fbbf24;
+  --warning-glow: rgba(251, 191, 36, 0.4);
+  --success-accent: #34d399;
+  --success-glow: rgba(52, 211, 153, 0.4);
+  --danger-accent: #ef4444;
+  --danger-glow: rgba(239, 68, 68, 0.4);
+
+  --bg-pattern-opacity: 0.05;
+}
+
+/* Theme 3: Synthwave Sunset */
+[data-theme="synthwave"] {
+  --bg-void: #0e061c;
+  --bg-panel: #160c2b;
+  --bg-panel-elevated: #261347;
+  --bg-input: #0a0414;
+  --text-main: #f1f5f9;
+  --text-muted: #cbd5e1;
+  --border-subtle: #3d1b6e;
+  --border-bright: #8b5cf6;
+  --border-focus: #ec4899;
+  
+  --primary-accent: #ec4899;
+  --primary-glow: rgba(236, 72, 153, 0.4);
+  --warning-accent: #f59e0b;
+  --warning-glow: rgba(245, 158, 11, 0.4);
+  --success-accent: #00f0ff;
+  --success-glow: rgba(0, 240, 255, 0.4);
+  --danger-accent: #f43f5e;
+  --danger-glow: rgba(244, 63, 94, 0.4);
+
+  --bg-pattern-opacity: 0.04;
+}
+
+/* Theme 4: Industrial Pit Crew / Hazard */
+[data-theme="hazard"] {
+  --bg-void: #09090b;
+  --bg-panel: #131317;
+  --bg-panel-elevated: #1e1e24;
+  --bg-input: #08080a;
+  --text-main: #f4f4f5;
+  --text-muted: #a1a1aa;
+  --border-subtle: #27272a;
+  --border-bright: #eab308;
+  --border-focus: #facc15;
+  
+  --primary-accent: #facc15;
+  --primary-glow: rgba(250, 204, 21, 0.35);
+  --warning-accent: #f97316;
+  --warning-glow: rgba(249, 115, 22, 0.35);
+  --success-accent: #22c55e;
+  --success-glow: rgba(34, 197, 94, 0.35);
+  --danger-accent: #ef4444;
+  --danger-glow: rgba(239, 68, 68, 0.35);
+
+  --bg-pattern-opacity: 0.04;
+}
+
+/* Theme 5: Formula Track / Motorsport */
+[data-theme="motorsport"] {
+  --bg-void: #080b12;
+  --bg-panel: #0f1624;
+  --bg-panel-elevated: #182238;
+  --bg-input: #06090f;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --border-subtle: #1e293b;
+  --border-bright: #ef4444;
+  --border-focus: #ef4444;
+  
+  --primary-accent: #ef4444;
+  --primary-glow: rgba(239, 68, 68, 0.4);
+  --warning-accent: #f59e0b;
+  --warning-glow: rgba(245, 158, 11, 0.4);
+  --success-accent: #10b981;
+  --success-glow: rgba(16, 185, 129, 0.4);
+  --danger-accent: #dc2626;
+  --danger-glow: rgba(220, 38, 38, 0.4);
+
+  --bg-pattern-opacity: 0.03;
+}
+
+/* Theme 6: Classroom High-Contrast Daylight (Projector-Optimized) */
+[data-theme="daylight"] {
+  --bg-void: #f1f5f9;
+  --bg-panel: #ffffff;
+  --bg-panel-elevated: #e2e8f0;
+  --bg-input: #f8fafc;
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --border-subtle: #cbd5e1;
+  --border-bright: #64748b;
+  --border-focus: #0284c7;
+  
+  --primary-accent: #0284c7;
+  --primary-glow: rgba(2, 132, 199, 0.25);
+  --warning-accent: #d97706;
+  --warning-glow: rgba(217, 119, 6, 0.25);
+  --success-accent: #059669;
+  --success-glow: rgba(5, 150, 105, 0.25);
+  --danger-accent: #e11d48;
+  --danger-glow: rgba(225, 29, 72, 0.25);
+
+  --font-display: 'Chakra Petch', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --bg-pattern-opacity: 0.06;
+}
+
+/* --------------------------------------------------------------------------
+   2. Base & Layout
+   -------------------------------------------------------------------------- */
 *, *::before, *::after {
   box-sizing: border-box;
 }
@@ -37,21 +166,74 @@
 body {
   margin: 0;
   background-color: var(--bg-void);
-  color: #e2e8f0;
+  color: var(--text-main);
   font-family: var(--font-mono);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 .bg-grid {
   background-size: 32px 32px;
   background-image:
-    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    linear-gradient(to right, rgba(255, 255, 255, var(--bg-pattern-opacity)) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, var(--bg-pattern-opacity)) 1px, transparent 1px);
 }
 
-/* Custom Tactical Scrollbars */
+[data-theme="daylight"] .bg-grid {
+  background-image:
+    linear-gradient(to right, rgba(15, 23, 42, var(--bg-pattern-opacity)) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, var(--bg-pattern-opacity)) 1px, transparent 1px);
+}
+
+/* --------------------------------------------------------------------------
+   3. Thematic Atmospherics & Textures
+   -------------------------------------------------------------------------- */
+
+/* Retro Arcade CRT Scanlines */
+[data-theme="arcade"]::before {
+  content: " ";
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+  background-size: 100% 3px, 6px 100%;
+  pointer-events: none;
+  z-index: 99;
+  opacity: 0.75;
+}
+
+/* Industrial Hazard Diagonal Warning Ribbon */
+[data-theme="hazard"] header {
+  border-bottom: 2px dashed var(--primary-accent);
+}
+
+/* Formula Motorsport Checkered Ribbon Accent */
+[data-theme="motorsport"] header {
+  border-bottom: 2px solid var(--primary-accent);
+}
+
+/* Daylight High-Contrast Border Tuning */
+[data-theme="daylight"] .card {
+  box-shadow: 0 4px 15px -2px rgba(15, 23, 42, 0.08), 0 0 0 1px var(--border-subtle);
+}
+[data-theme="daylight"] .bg-arena-950 {
+  background-color: var(--bg-void) !important;
+}
+[data-theme="daylight"] .bg-arena-900 {
+  background-color: var(--bg-panel) !important;
+}
+[data-theme="daylight"] .text-slate-400,
+[data-theme="daylight"] .text-slate-300 {
+  color: var(--text-muted) !important;
+}
+[data-theme="daylight"] .text-white {
+  color: var(--text-main) !important;
+}
+
+/* --------------------------------------------------------------------------
+   4. Tactical Scrollbars
+   -------------------------------------------------------------------------- */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -64,10 +246,12 @@ body {
   border-radius: 99px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--cyan);
+  background: var(--primary-accent);
 }
 
-/* Buttons */
+/* --------------------------------------------------------------------------
+   5. Interactive Buttons & Components
+   -------------------------------------------------------------------------- */
 .btn-nav {
   display: inline-flex;
   align-items: center;
@@ -75,7 +259,7 @@ body {
   padding: 0.4rem 0.75rem;
   border-radius: 0.5rem;
   background-color: var(--bg-panel-elevated);
-  color: #e2e8f0;
+  color: var(--text-main);
   border: 1px solid var(--border-subtle);
   font-family: var(--font-mono);
   font-size: 0.8125rem;
@@ -85,9 +269,8 @@ body {
   user-select: none;
 }
 .btn-nav:hover {
-  background-color: #1e293b;
+  background-color: var(--border-subtle);
   border-color: var(--border-bright);
-  color: #ffffff;
 }
 
 .btn-primary {
@@ -96,19 +279,19 @@ body {
   justify-content: center;
   padding: 0.65rem 1.35rem;
   border-radius: 0.75rem;
-  background-color: var(--cyan);
+  background-color: var(--primary-accent);
   color: #000000;
   font-family: var(--font-display);
   font-weight: 700;
-  border: 1px solid var(--cyan);
-  box-shadow: 0 0 20px -3px var(--cyan-glow);
+  border: 1px solid var(--primary-accent);
+  box-shadow: 0 0 20px -3px var(--primary-glow);
   transition: all 0.15s ease-in-out;
   cursor: pointer;
   user-select: none;
 }
 .btn-primary:hover {
-  background-color: #38f4ff;
-  box-shadow: 0 0 25px 2px var(--cyan-glow);
+  filter: brightness(1.15);
+  box-shadow: 0 0 25px 2px var(--primary-glow);
 }
 .btn-primary:active {
   transform: scale(0.96);
@@ -121,7 +304,7 @@ body {
   padding: 0.5rem 1rem;
   border-radius: 0.75rem;
   background-color: rgba(16, 185, 129, 0.15);
-  color: #6ee7b7;
+  color: var(--success-accent);
   border: 1px solid rgba(16, 185, 129, 0.4);
   font-family: var(--font-display);
   font-weight: 700;
@@ -130,9 +313,9 @@ body {
   user-select: none;
 }
 .btn-success:hover {
-  background-color: var(--emerald);
+  background-color: var(--success-accent);
   color: #000000;
-  box-shadow: 0 0 15px -3px var(--emerald-glow);
+  box-shadow: 0 0 15px -3px var(--success-glow);
 }
 .btn-success:active {
   transform: scale(0.96);
@@ -145,7 +328,7 @@ body {
   padding: 0.5rem 1rem;
   border-radius: 0.75rem;
   background-color: rgba(244, 63, 94, 0.15);
-  color: #fda4af;
+  color: var(--danger-accent);
   border: 1px solid rgba(244, 63, 94, 0.4);
   font-family: var(--font-display);
   font-weight: 700;
@@ -154,9 +337,9 @@ body {
   user-select: none;
 }
 .btn-danger:hover {
-  background-color: var(--rose);
+  background-color: var(--danger-accent);
   color: #ffffff;
-  box-shadow: 0 0 15px -3px var(--rose-glow);
+  box-shadow: 0 0 15px -3px var(--danger-glow);
 }
 .btn-danger:active {
   transform: scale(0.96);
@@ -168,7 +351,8 @@ body {
   border: 1px solid var(--border-subtle);
   border-radius: 1rem;
   padding: 1.25rem;
-  box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.4);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .input-field {
@@ -179,42 +363,45 @@ body {
   padding: 0.55rem 1rem;
   font-size: 0.875rem;
   font-family: var(--font-mono);
-  color: #ffffff;
+  color: var(--text-main);
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .input-field:focus {
-  border-color: var(--cyan);
-  box-shadow: 0 0 0 2px var(--cyan-glow);
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 2px var(--primary-glow);
 }
 .input-field:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-/* ==========================================================================
-   Modern Native <dialog> Top-Layer Styling
-   ========================================================================== */
+/* --------------------------------------------------------------------------
+   6. Native HTML5 <dialog> Element Top-Layer Styling
+   -------------------------------------------------------------------------- */
 dialog {
   background-color: var(--bg-panel);
-  color: #e2e8f0;
+  color: var(--text-main);
   border: 1px solid var(--border-bright);
   border-radius: 1.25rem;
   padding: 0;
   width: calc(100% - 2rem);
-  max-width: 32rem;
+  max-width: 33rem;
   max-height: 90vh;
-  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.9), 0 0 40px rgba(0, 240, 255, 0.1);
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.9), 0 0 40px var(--primary-glow);
   overflow: hidden;
 }
 
 dialog::backdrop {
-  background: rgba(3, 7, 18, 0.85);
+  background: rgba(3, 7, 18, 0.82);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
 
-/* Dialog Animation on Open */
+[data-theme="daylight"] dialog::backdrop {
+  background: rgba(15, 23, 42, 0.6);
+}
+
 dialog[open] {
   animation: dialogScaleIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
@@ -236,7 +423,7 @@ dialog[open] {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: rgba(0, 0, 0, 0.2);
+  background-color: rgba(0, 0, 0, 0.15);
 }
 
 .dialog-body {
@@ -251,12 +438,12 @@ dialog[open] {
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
-  background-color: rgba(0, 0, 0, 0.2);
+  background-color: rgba(0, 0, 0, 0.15);
 }
 
-/* ==========================================================================
-   Projector Mode (Clean Telemetry for Classroom Display)
-   ========================================================================== */
+/* --------------------------------------------------------------------------
+   7. Projector Mode
+   -------------------------------------------------------------------------- */
 :fullscreen header,
 :fullscreen footer {
   display: none !important;
@@ -271,17 +458,17 @@ body.projector-mode {
 }
 body.projector-mode .projector-target {
   font-size: 5.5rem !important;
-  text-shadow: 0 0 30px var(--cyan-glow);
+  text-shadow: 0 0 30px var(--primary-glow);
 }
 body.projector-mode .projector-card {
   border-width: 2px;
-  border-color: var(--cyan) !important;
-  background-color: #020611 !important;
+  border-color: var(--primary-accent) !important;
+  background-color: var(--bg-void) !important;
 }
 
-/* ==========================================================================
-   Visual Overlays & Hardware FX
-   ========================================================================== */
+/* --------------------------------------------------------------------------
+   8. Visual FX Keyframes
+   -------------------------------------------------------------------------- */
 @keyframes screenShakeAnim {
   0% { transform: translate(0, 0); }
   20% { transform: translate(-5px, 4px); }
@@ -321,10 +508,10 @@ body.projector-mode .projector-card {
 
 @keyframes glowPulse {
   0%, 100% {
-    box-shadow: 0 0 25px -5px rgba(245, 158, 11, 0.6), inset 0 0 20px -5px rgba(244, 63, 94, 0.3);
+    box-shadow: 0 0 25px -5px var(--warning-glow), inset 0 0 20px -5px var(--danger-glow);
   }
   50% {
-    box-shadow: 0 0 45px 5px rgba(244, 63, 94, 0.7), inset 0 0 35px 2px rgba(244, 63, 94, 0.5);
+    box-shadow: 0 0 45px 5px var(--danger-glow), inset 0 0 35px 2px var(--danger-glow);
   }
 }
 .animate-glow-pulse {

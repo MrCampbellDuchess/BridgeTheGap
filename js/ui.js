@@ -589,6 +589,8 @@ window.Arena.UI = (function () {
     const setVol = document.getElementById('setVol');
     const setVolLabel = document.getElementById('setVolLabel');
     const setSoundpack = document.getElementById('setSoundpack');
+    const setTheme = document.getElementById('setTheme');
+    const setSyncAudio = document.getElementById('setSyncAudio');
     const setPromptCsv = document.getElementById('setPromptCsv');
     const setBDist = document.getElementById('setBDist');
     const setBName = document.getElementById('setBName');
@@ -605,6 +607,19 @@ window.Arena.UI = (function () {
     if (setVol) setVol.value = State.cfg.sVol;
     if (setVolLabel) setVolLabel.innerText = State.cfg.sVol + '%';
     if (setSoundpack) setSoundpack.value = State.cfg.soundpack || 'cyber';
+    if (setTheme) {
+      setTheme.value = State.cfg.theme || 'cyber';
+      setTheme.onchange = e => {
+        State.applyTheme(e.target.value);
+        if (setSyncAudio && setSyncAudio.checked && Audio.getCompanionSoundpack) {
+          const sp = Audio.getCompanionSoundpack(e.target.value);
+          if (setSoundpack) setSoundpack.value = sp;
+          Audio.soundpack = sp;
+          State.cfg.soundpack = sp;
+        }
+      };
+    }
+    if (setSyncAudio) setSyncAudio.checked = State.cfg.syncAudio !== false;
     if (setPromptCsv) setPromptCsv.checked = State.cfg.promptCsvOnEnd !== false;
 
     if (State.cfg.bMode === 'custom') {
@@ -723,6 +738,17 @@ window.Arena.UI = (function () {
         Audio.on = State.cfg.sOn;
         State.cfg.sVol = parseInt(document.getElementById('setVol').value) || 75;
         Audio.vol = State.cfg.sVol / 100;
+
+        const themeSelect = document.getElementById('setTheme');
+        if (themeSelect) {
+          State.cfg.theme = themeSelect.value;
+          State.applyTheme(themeSelect.value);
+        }
+
+        const syncAudioCheck = document.getElementById('setSyncAudio');
+        if (syncAudioCheck) {
+          State.cfg.syncAudio = syncAudioCheck.checked;
+        }
 
         const soundpackSelect = document.getElementById('setSoundpack');
         if (soundpackSelect) {

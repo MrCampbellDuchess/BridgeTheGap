@@ -19,6 +19,8 @@ window.Arena.State = (function () {
     sOn: true,
     sVol: 75,
     soundpack: 'cyber',
+    theme: 'cyber',
+    syncAudio: false,
     auto: true,
     qFilt: 'active',
     sFilt: 'block',
@@ -28,6 +30,18 @@ window.Arena.State = (function () {
   let tmr = null;
   let pendGap = null;
   let sdBot = null;
+
+  function applyTheme(themeName) {
+    if (!themeName) return;
+    cfg.theme = themeName;
+    document.documentElement.setAttribute('data-theme', themeName);
+
+    if (cfg.syncAudio && window.Arena && window.Arena.Audio && window.Arena.Audio.getCompanionSoundpack) {
+      const sp = window.Arena.Audio.getCompanionSoundpack(themeName);
+      cfg.soundpack = sp;
+      window.Arena.Audio.soundpack = sp;
+    }
+  }
 
   function initData() {
     const historical = [
@@ -113,6 +127,9 @@ window.Arena.State = (function () {
       window.Arena.Audio.vol = cfg.sVol / 100;
       if (cfg.soundpack) window.Arena.Audio.soundpack = cfg.soundpack;
     }
+
+    // Apply visual theme
+    applyTheme(cfg.theme || 'cyber');
   }
 
   function save() {
@@ -224,6 +241,7 @@ window.Arena.State = (function () {
     save,
     getBots,
     getRec,
+    applyTheme,
     triggerDownload,
     downloadStandingsCSV,
     downloadAttemptLogCSV
