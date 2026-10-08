@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bridge the Gap Arena — Sudden Death & Tournament Controller</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['"Chakra Petch"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            arena: { 950: '#070b14', 900: '#0b1120', 850: '#111a2e', border: '#1e3052', cyan: '#00f0ff' }
+          },
+          animation: { 'glow-pulse': 'glowPulse 2s infinite ease-in-out' },
+          keyframes: {
+            glowPulse: {
+              '0%, 100%': { boxShadow: '0 0 25px -5px rgba(245, 158, 11, 0.6), inset 0 0 20px -5px rgba(244, 63, 94, 0.3)' },
+              '50%': { boxShadow: '0 0 45px 5px rgba(244, 63, 94, 0.7), inset 0 0 35px 2px rgba(244, 63, 94, 0.5)' },
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style type="text/tailwindcss">
+    @layer components {
+      .btn-nav { @apply px-3 py-1.5 rounded-lg bg-arena-850 hover:bg-slate-800 text-slate-200 border border-arena-border text-xs sm:text-sm font-medium flex items-center gap-1.5 transition; }
+      .btn-primary { @apply px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-display font-bold shadow-lg shadow-cyan-500/20 active:scale-95 transition; }
+      .btn-success { @apply px-4 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500 text-emerald-300 hover:text-black border border-emerald-500/40 font-display font-bold active:scale-95 transition; }
+      .btn-danger { @apply px-4 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/40 font-display font-bold active:scale-95 transition; }
+      .card { @apply bg-arena-900 border border-arena-border rounded-2xl p-5 shadow-xl; }
+      .modal-overlay { @apply fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 hidden; }
+      .modal-content { @apply bg-arena-900 border border-arena-border rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[92vh]; }
+      .input-field { @apply w-full bg-arena-950 border border-arena-border rounded-xl px-4 py-2 text-sm font-mono text-white focus:outline-none focus:border-cyan-500 disabled:opacity-50; }
+    }
+    body { background-color: #070b14; color: #e2e8f0; }
+    .bg-grid { background-size: 32px 32px; background-image: linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px); }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0b1120; }
+    ::-webkit-scrollbar-thumb { background: #1e3052; border-radius: 99px; }
+    /* Projector Mode Rules */
+    :fullscreen header, :fullscreen footer { display: none !important; }
+    :fullscreen main { padding-top: 1rem !important; max-width: 100% !important; }
+    body.projector-mode { background-color: #000 !important; font-size: 1.15rem; }
+    body.projector-mode .projector-target { font-size: 5rem !important; }
+    body.projector-mode .projector-card { border-width: 2px; border-color: #00f0ff !important; background-color: #020611 !important; }
+    @keyframes countdownBar { from { width: 100%; } to { width: 0%; } }
+    .animate-countdown { animation: countdownBar 2s linear forwards; }
+  </style>
+</head>
+
+<body class="min-h-screen bg-grid flex flex-col font-sans selection:bg-cyan-500 selection:text-black">
+
+  <header class="sticky top-0 z-30 backdrop-blur-md bg-arena-950/90 border-b border-arena-border">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-cyan-600 to-amber-400 flex items-center justify-center text-xl shadow-lg">🌉</div>
+        <div>
+          <h1 class="font-display font-bold text-lg sm:text-xl text-white uppercase">Bridge the Gap <span class="text-xs px-2 py-0.5 rounded bg-cyan-900/50 text-cyan-400 font-mono border border-cyan-500/30">Tourney v4.4</span></h1>
+          <p class="text-xs text-slate-400">Classroom Robotics Flight Controller • Auto-Advance Engine</p>
+        </div>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <button id="btnSoundToggle" class="btn-nav"><span id="soundToggleIcon">🔊</span> FX: ON</button>
+        <button id="btnOpenSettingsModal" class="btn-nav text-amber-300 border-amber-500/40">⚙️ Settings <span id="navSettingsBadge" class="hidden text-[10px] px-1 rounded bg-amber-500/20">🔒</span></button>
+        <button id="btnOpenPrepareModal" class="btn-nav text-rose-300 border-rose-700/60">⚠️ Prepare/Reset</button>
+        <button id="btnOpenBatchRoster" class="btn-nav text-cyan-400">👥 Quick Roster</button>
+        <button id="btnCsvModal" class="btn-nav">💾 CSV Hub</button>
+        <button id="btnToggleProjector" class="btn-nav text-amber-400">📺 Projector</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Auto-Advance Banner -->
+  <div id="autoAdvanceBanner" class="hidden sticky top-[61px] z-25 bg-cyan-950 border-b-2 border-cyan-400 text-white shadow-2xl">
+    <div class="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-between">
+      <div class="flex items-center gap-3 font-mono text-sm">
+        <span class="w-3 h-3 rounded-full bg-cyan-400 animate-ping"></span>
+        <span class="font-bold text-cyan-400">ROUND COMPLETE:</span> <span id="autoAdvanceMsg">Advancing...</span>
+      </div>
+      <div class="flex gap-2">
+        <button id="btnCancelAutoAdvance" class="px-3 py-1 rounded bg-rose-600 text-white text-xs font-bold uppercase transition hover:bg-rose-500">Cancel / Pause</button>
+        <button id="btnInstantAutoAdvance" class="px-3 py-1 rounded bg-cyan-400 text-black text-xs font-bold uppercase transition hover:bg-cyan-300">Advance ⏩</button>
+      </div>
+    </div>
+    <div class="w-full h-1 bg-black"><div id="autoAdvanceProgressBar" class="h-full bg-cyan-400"></div></div>
+  </div>
+
+  <!-- Tournament Complete Banner -->
+  <div id="tournamentCompleteBanner" class="hidden bg-amber-950/40 border-b border-amber-500/40 px-4 py-2">
+    <div class="max-w-7xl mx-auto flex items-center justify-between text-sm">
+      <div class="flex items-center gap-2"><span class="text-xl">🏆</span><span class="font-bold text-amber-300">Tournament Flight Complete!</span></div>
+      <div class="flex gap-2">
+        <button id="bannerDownloadResultsBtn" class="px-3 py-1 rounded bg-amber-400 text-black font-bold shadow hover:bg-amber-300">📥 Results CSV</button>
+        <button id="bannerDownloadLogBtn" class="px-3 py-1 rounded bg-slate-800 text-slate-200 border border-slate-600 hover:bg-slate-700">📋 Option A Log</button>
+      </div>
+    </div>
+  </div>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6 space-y-6">
+
+    <!-- Sudden Death Banner -->
+    <section id="suddenDeathBanner" class="hidden relative overflow-hidden rounded-3xl border-2 border-amber-500 bg-gradient-to-r from-amber-950 to-rose-950 p-6 sudden-death-glow animate-glow-pulse flex flex-col lg:flex-row justify-between items-center gap-6">
+      <div class="space-y-2">
+        <div class="flex items-center gap-3">
+          <span class="px-3 py-1 rounded-full bg-amber-500 text-black font-display font-bold text-xs tracking-widest uppercase">🔥 SUDDEN DEATH</span>
+          <span id="sdFlightBadge" class="text-xs font-mono px-2 py-0.5 rounded bg-black/50 text-amber-200">Sole Survivor</span>
+        </div>
+        <div>
+          <div class="text-xs font-mono text-slate-300">COMPETITOR</div>
+          <h2 id="sdBotName" class="text-4xl font-display font-extrabold text-white uppercase drop-shadow-md">ROBOT</h2>
+        </div>
+        <div class="flex gap-4 pt-2">
+          <div class="bg-black/50 border border-amber-500/30 px-3 py-2 rounded-xl"><span class="text-[10px] text-slate-400 block font-mono">Target</span><span class="font-display font-bold text-2xl text-amber-300" id="sdTargetGap">--</span><span class="text-xs text-amber-400">cm</span></div>
+          <div class="bg-black/50 border border-emerald-500/30 px-3 py-2 rounded-xl"><span class="text-[10px] text-slate-400 block font-mono">Best</span><span class="font-display font-bold text-2xl text-emerald-400" id="sdBestSpan">--</span><span class="text-xs text-emerald-400">cm</span></div>
+          <div class="bg-black/50 border border-cyan-500/30 px-3 py-2 rounded-xl"><span class="text-[10px] text-slate-400 block font-mono">Record</span><span class="font-display font-bold text-2xl text-cyan-300" id="sdRecord">56</span><span class="text-xs text-cyan-400">cm</span></div>
+        </div>
+        <p id="sdProximityText" class="text-sm font-mono text-amber-200 pt-1">⚡ At the frontier! Clear to break the record!</p>
+      </div>
+      <div class="flex flex-col gap-3">
+        <button id="btnSdClear" class="px-6 py-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-display font-bold text-base shadow-lg shadow-emerald-500/30 active:scale-95 transition">✓ CLEAR GAP <span id="sdClearLabel" class="text-sm font-mono ml-2 opacity-75">(--cm)</span></button>
+        <button id="btnSdFail" class="px-6 py-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-display font-bold text-sm shadow-lg active:scale-95 transition">✗ STRUCTURAL FAILURE</button>
+        <button id="btnSdRetire" class="px-6 py-3 rounded-xl bg-black/40 border border-amber-500/40 text-amber-300 font-display font-bold text-xs hover:bg-black/60 transition">👑 CROWN & CONCLUDE</button>
+      </div>
+    </section>
+
+    <!-- Main Round Controls -->
+    <section class="card bg-gradient-to-br from-arena-900 to-arena-950 projector-card flex flex-col lg:flex-row justify-between gap-6">
+      <div class="space-y-3">
+        <div class="flex items-center gap-2 text-xs font-mono text-slate-400">
+          <b>Block:</b> <div id="periodSelector" class="inline-flex rounded-lg bg-arena-950 p-1 border border-arena-border"></div>
+          <span id="soloBadge" class="hidden px-2 py-1 bg-cyan-950 border border-cyan-800 text-cyan-300 rounded-lg">Period 1 (Solo)</span>
+          <select id="selSemester" class="bg-arena-950 border border-arena-border rounded px-2 py-1 text-cyan-300"></select>
+          <span id="ruleConfigPill" class="px-2 py-1 rounded bg-arena-950 border border-arena-border"></span>
+          <span id="autoAdvanceBadge" class="px-2 py-1 rounded bg-cyan-950 border border-cyan-800 text-cyan-300">⚡ ON</span>
+        </div>
+        <div class="flex items-baseline gap-4 pt-1">
+          <div>
+            <div class="text-xs font-mono text-slate-400 uppercase">Target Gap</div>
+            <div class="flex items-baseline gap-2"><span id="uiCurrentGap" class="text-6xl font-display font-bold text-cyan-400 projector-target">5</span><span class="text-2xl font-mono text-cyan-400">cm</span></div>
+          </div>
+          <div class="border-l border-arena-border pl-4 text-xs text-slate-400 space-y-1">
+            <div>Round: <b id="uiRoundNum" class="text-white">1</b> (Starts <span id="uiInitGap" class="text-amber-300">5</span>, +<span id="uiStep" class="text-cyan-300">2</span>)</div>
+            <div>In Hunt: <b id="uiAliveCount" class="text-emerald-400">0</b></div>
+            <div>Eliminated: <b id="uiElimCount" class="text-rose-400">0</b></div>
+          </div>
+        </div>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-3 items-center">
+        <div class="bg-arena-950 p-3 rounded-xl border border-arena-border text-center">
+          <div class="text-[11px] font-mono text-slate-400 mb-2">Gap Step (<span id="btnAdvLabel">+2cm</span>)</div>
+          <div class="flex gap-2">
+            <button id="btnAdvance" class="btn-primary">Advance ⏩</button>
+            <button id="btnManualGap" class="px-3 py-2 bg-slate-800 rounded-xl hover:bg-slate-700">⚙️</button>
+          </div>
+        </div>
+        <div class="flex flex-col gap-2">
+          <button id="btnBulkPass" class="px-4 py-2 bg-arena-950 border border-emerald-500/30 text-emerald-400 rounded-xl text-xs font-bold hover:bg-emerald-900/40">✓ Clear All Alive</button>
+          <button id="btnResetGap" class="px-4 py-2 bg-arena-950 border border-amber-500/30 text-amber-400 rounded-xl text-xs font-bold hover:bg-amber-900/40">↺ Reset Gap (<span id="uiBtnResetGap">5</span>cm)</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Queue & Side Panel Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <!-- Queue -->
+      <section class="lg:col-span-2 space-y-4">
+        <div class="card flex flex-wrap justify-between items-center gap-3 p-4">
+          <div>
+            <h2 class="font-display font-bold text-lg text-white">ATTEMPT QUEUE <span id="queueBadge" class="text-xs px-2 py-0.5 ml-2 bg-cyan-900 text-cyan-300 rounded font-mono">0 In Hunt</span></h2>
+            <div class="text-[11px] font-mono text-slate-400 mt-1"><b>Hotkeys:</b> <b class="text-emerald-400">[1]</b> Pass <b class="text-rose-400">[2]</b> Fail <b class="text-cyan-400">[Space]</b> Advance</div>
+          </div>
+          <div id="queueFilter" class="flex bg-arena-950 p-1 rounded-lg border border-arena-border text-xs font-mono">
+            <button data-q="active" class="q-btn active px-3 py-1 rounded bg-arena-800 text-white">Active</button>
+            <button data-q="elim" class="q-btn px-3 py-1 rounded text-slate-400">Knocked Out</button>
+            <button data-q="all" class="q-btn px-3 py-1 rounded text-slate-400">All</button>
+          </div>
+        </div>
+        <div id="queueCards" class="space-y-3"></div>
+        <div id="queueEmpty" class="hidden card text-center text-slate-400 py-8">🏁 No robots here. Add via Roster.</div>
+      </section>
+
+      <!-- Stats Aside -->
+      <aside class="space-y-6">
+        <!-- Multi-period Clash -->
+        <div id="multiCard" class="card space-y-4 hidden">
+          <div class="flex justify-between text-xs font-mono font-bold text-slate-400"><span>PERIOD CLASH (AVG)</span><span id="clashBadge" class="px-2 py-0.5 rounded bg-slate-800">Tie</span></div>
+          <div id="clashGrid" class="grid grid-cols-2 gap-3 text-center"></div>
+          <div class="h-2 w-full bg-arena-950 rounded-full flex border border-arena-border overflow-hidden" id="clashBar"></div>
+        </div>
+        <!-- Single Period Stats -->
+        <div id="singleCard" class="card space-y-4 hidden">
+          <div class="flex justify-between text-xs font-mono font-bold text-slate-400"><span>BLOCK ANALYTICS</span><span class="px-2 py-0.5 rounded bg-cyan-900 text-cyan-300">Solo</span></div>
+          <div class="grid grid-cols-2 gap-3 text-center">
+            <div class="bg-black/30 p-2 border border-cyan-500/20 rounded-xl"><div class="text-[10px] text-cyan-400">AVG</div><div class="text-2xl font-display font-bold text-white" id="soloAvg">0</div></div>
+            <div class="bg-black/30 p-2 border border-emerald-500/20 rounded-xl"><div class="text-[10px] text-emerald-400">RATE</div><div class="text-2xl font-display font-bold text-white" id="soloRate">0%</div></div>
+          </div>
+        </div>
+        <!-- Benchmark -->
+        <div class="card bg-gradient-to-br from-arena-900 to-arena-950 text-center">
+          <div class="text-xs font-mono text-amber-400 font-bold mb-2">👑 APEX BENCHMARK</div>
+          <div class="text-4xl font-display font-bold text-cyan-400" id="uiBenchDist">56<span class="text-lg">cm</span></div>
+          <div class="text-sm font-bold text-white mt-1" id="uiBenchHolder">Chasm Crawler</div>
+          <div class="text-xs font-mono text-slate-400 mt-2 bg-black/40 p-1 rounded border border-arena-border" id="uiBenchMode">Auto Mode</div>
+        </div>
+        <!-- Rules config info -->
+        <div class="card p-4 bg-arena-950 text-xs font-mono text-slate-400">
+          <div class="flex justify-between mb-2"><b class="text-white">Active Rules</b> <span id="ruleLockBadge" class="px-1 bg-amber-500/20 text-amber-300 rounded">Locked</span></div>
+          <div class="grid grid-cols-3 gap-1 text-center">
+            <div class="border border-arena-border p-1 rounded">START<br><b id="rcInit" class="text-amber-300">5</b></div>
+            <div class="border border-arena-border p-1 rounded">STEP<br><b id="rcStep" class="text-cyan-300">+2</b></div>
+            <div class="border border-arena-border p-1 rounded">PER<br><b id="rcPer" class="text-purple-300">2</b></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Matrix -->
+    <section class="card space-y-4">
+      <div class="flex justify-between items-center text-sm font-display font-bold text-white">
+        <h2>SURVIVAL MATRIX</h2>
+        <select id="matrixScope" class="bg-arena-950 font-mono text-xs p-1 rounded border border-arena-border"><option value="current">Current Block</option><option value="all">All Data</option></select>
+      </div>
+      <div class="overflow-x-auto bg-arena-950 rounded-xl border border-arena-border max-h-[300px] overflow-y-auto custom-scroll">
+        <table class="w-full text-left text-xs font-mono whitespace-nowrap">
+          <thead id="matrixHead" class="bg-arena-900 sticky top-0 border-b border-arena-border text-slate-400"></thead>
+          <tbody id="matrixBody" class="divide-y divide-arena-border/50 text-slate-300"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Standings -->
+    <section class="card space-y-4">
+      <div class="flex justify-between items-center text-sm font-display font-bold text-white">
+        <h2>LEADERBOARD STANDINGS</h2>
+        <div id="standFilter" class="flex bg-arena-950 p-1 rounded-lg border border-arena-border text-xs font-mono">
+          <button data-s="block" class="s-btn active px-2 py-1 rounded bg-arena-800 text-white">Block</button>
+          <button data-s="semester" class="s-btn px-2 py-1 rounded text-slate-400">Semester</button>
+          <button data-s="all" class="s-btn px-2 py-1 rounded text-slate-400">All-Time</button>
+        </div>
+      </div>
+      <div class="overflow-x-auto max-h-[400px] overflow-y-auto custom-scroll">
+        <table class="w-full text-left text-sm border-collapse">
+          <thead class="bg-arena-950 sticky top-0 border-b border-arena-border text-xs font-mono text-slate-400">
+            <tr><th class="p-2 w-16">Rank</th><th class="p-2">Robot</th><th class="p-2 text-center" id="colPer">Period</th><th class="p-2">Span vs Record (<span id="thRecord">56</span>cm)</th><th class="p-2 text-right w-24">Max Clear</th></tr>
+          </thead>
+          <tbody id="standingsBody" class="divide-y divide-arena-border/50 text-slate-200"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-arena-950 border-t border-arena-border py-4 text-center text-xs font-mono text-slate-500">
+    Clean Schema: Semester,Period,Robot Name,Round Distance (cm),Result,Timestamp | <button id="btnRestoreDemo" class="text-cyan-400 hover:underline">Restore Demo Data</button>
+  </footer>
+
+  <!-- Modals -->
+  <!-- Coronation Modal -->
+  <div id="modalCrown" class="modal-overlay">
+    <div class="modal-content text-center p-8 border-2 border-amber-500 sudden-death-glow items-center justify-center">
+      <div class="text-6xl animate-pulse mb-4">👑</div>
+      <div class="text-xs font-mono text-amber-300 font-bold tracking-widest">CHAMPION CROWNED</div>
+      <h2 id="crownName" class="text-4xl font-display font-bold text-white uppercase mt-2">ROBOT</h2>
+      <div class="flex gap-4 mt-4 justify-center">
+        <div class="bg-black/50 p-3 rounded-xl border border-arena-border"><div class="text-[10px] text-slate-400 font-mono">Max Distance</div><div class="text-2xl font-display font-bold text-emerald-400" id="crownDist">56cm</div></div>
+        <div class="bg-black/50 p-3 rounded-xl border border-arena-border"><div class="text-[10px] text-slate-400 font-mono">Status</div><div class="text-sm font-display font-bold text-amber-300 mt-2" id="crownStatus">RECORD</div></div>
+      </div>
+      <div class="mt-6 flex flex-col gap-2 w-full">
+        <button id="btnDlResults" class="btn-primary bg-amber-400 hover:bg-amber-300 text-black">📥 Download Final Results CSV</button>
+        <button id="btnDlLog" class="btn-nav justify-center">📋 Download Option A Log</button>
+        <button id="btnCloseCrown" class="mt-2 text-slate-400 hover:text-white text-xs font-mono">Return to Board</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="modalSettings" class="modal-overlay">
+    <div class="modal-content">
+      <div class="p-4 border-b border-arena-border flex justify-between"><h3 class="font-display font-bold text-white">⚙️ Settings</h3><button class="close-modal text-slate-400">&times;</button></div>
+      <div class="p-5 space-y-4 overflow-y-auto">
+        <div id="setLockBanner" class="hidden p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs text-amber-300">🔒 <b>Locked.</b> Attempts exist for current block.</div>
+        <div class="flex items-center justify-between bg-black/40 p-3 rounded-xl border border-arena-border">
+          <span class="text-xs font-mono text-cyan-300">Auto-Advance</span><input type="checkbox" id="setAutoAdv" class="w-4 h-4">
+        </div>
+        <div class="bg-black/40 p-3 rounded-xl border border-arena-border space-y-2">
+          <div class="flex items-center justify-between text-xs font-mono text-cyan-300"><span>Sound FX</span><input type="checkbox" id="setSnd" class="w-4 h-4"></div>
+          <div class="flex items-center justify-between text-xs font-mono text-slate-400"><span>Volume</span><span id="setVolLabel">75%</span></div>
+          <input type="range" id="setVol" min="0" max="100" class="w-full">
+        </div>
+        <div><label class="text-xs font-mono text-slate-400">Periods (1-4)</label><input type="number" id="setPer" min="1" max="4" class="input-field"></div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="text-xs font-mono text-slate-400">Start (cm)</label><input type="number" id="setInit" class="input-field"></div>
+          <div><label class="text-xs font-mono text-slate-400">Step (+cm)</label><input type="number" id="setStep" class="input-field"></div>
+        </div>
+        <div class="bg-black/40 p-3 rounded-xl border border-arena-border space-y-2">
+          <label class="text-xs font-mono text-amber-300">👑 Benchmark Record</label>
+          <div class="flex gap-4 text-xs font-mono text-slate-300"><label><input type="radio" name="bMode" id="bmAuto" value="auto"> Auto</label><label><input type="radio" name="bMode" id="bmCustom" value="custom"> Custom</label></div>
+          <div class="grid grid-cols-2 gap-3"><input type="number" id="setBDist" class="input-field text-amber-300" placeholder="cm"><input type="text" id="setBName" class="input-field" placeholder="Holder"></div>
+        </div>
+        <div><label class="text-xs font-mono text-slate-400">Semester Tag</label><input type="text" id="setSem" class="input-field"></div>
+      </div>
+      <div class="p-4 border-t border-arena-border text-right"><button id="btnSaveSet" class="btn-primary py-2 text-sm">Save</button></div>
+    </div>
+  </div>
+
+  <!-- Prepare Modal -->
+  <div id="modalPrepare" class="modal-overlay">
+    <div class="modal-content">
+      <div class="p-4 border-b border-arena-border flex justify-between"><h3 class="font-display font-bold text-rose-400">⚠️ Wipe Data</h3><button class="close-modal text-slate-400">&times;</button></div>
+      <div class="p-5 space-y-4">
+        <button id="btnDlBackup" class="w-full btn-nav justify-center bg-amber-500/20 text-amber-300 border-amber-500/40 py-2">📥 Download CSV Backup First</button>
+        <div class="space-y-2 text-sm font-mono">
+          <label class="flex gap-2 p-3 bg-arena-950 border border-arena-border rounded-xl cursor-pointer hover:border-cyan-500"><input type="radio" name="wipe" value="block" checked> <div><b>Reset Active Block</b><br><span class="text-xs text-slate-500">Unlocks rules for this flight.</span></div></label>
+          <label class="flex gap-2 p-3 bg-arena-950 border border-arena-border rounded-xl cursor-pointer hover:border-rose-500"><input type="radio" name="wipe" value="all"> <div><b class="text-rose-400">Nuke All Data</b><br><span class="text-xs text-slate-500">Fresh slate across all terms.</span></div></label>
+        </div>
+        <input type="text" id="wipeConf" placeholder="Type RESET" class="input-field text-center font-bold text-rose-400">
+      </div>
+      <div class="p-4 border-t border-arena-border"><button id="btnExecWipe" class="w-full btn-danger" disabled>Execute Reset</button></div>
+    </div>
+  </div>
+
+  <!-- Roster Modal -->
+  <div id="modalRoster" class="modal-overlay">
+    <div class="modal-content">
+      <div class="p-4 border-b border-arena-border flex justify-between"><h3 class="font-display font-bold text-white">👥 Batch Roster</h3><button class="close-modal text-slate-400">&times;</button></div>
+      <div class="p-5 space-y-2">
+        <div class="text-xs font-mono text-cyan-300 mb-2" id="rosterTarget">Target: Block</div>
+        <textarea id="rosterInput" rows="8" class="input-field h-40" placeholder="Paste names (1 per line)"></textarea>
+      </div>
+      <div class="p-4 border-t border-arena-border"><button id="btnLoadRoster" class="w-full btn-primary py-2 text-sm">Load into Queue</button></div>
+    </div>
+  </div>
+
+  <!-- CSV Modal -->
+  <div id="modalCsv" class="modal-overlay">
+    <div class="modal-content max-w-3xl">
+      <div class="p-4 border-b border-arena-border flex justify-between"><h3 class="font-display font-bold text-white">💾 CSV Hub</h3><button class="close-modal text-slate-400">&times;</button></div>
+      <div class="p-5 space-y-3 flex-1 flex flex-col">
+        <div class="flex gap-2 text-xs font-mono"><button id="btnCsvClean" class="text-emerald-400 hover:underline">Format Syntax</button> | <button id="btnCsvCopy" class="text-cyan-400 hover:underline">Copy</button></div>
+        <textarea id="csvEditor" class="input-field flex-1 h-64 text-[10px] text-emerald-400 whitespace-pre" spellcheck="false"></textarea>
+      </div>
+      <div class="p-4 border-t border-arena-border flex justify-between">
+        <button id="btnCsvExport" class="btn-nav">📥 Export Log</button>
+        <button id="btnCsvApply" class="btn-primary py-2 text-sm">Apply to Arena</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manual Gap Modal -->
+  <div id="modalGap" class="modal-overlay">
+    <div class="modal-content max-w-xs">
+      <div class="p-5 space-y-4">
+        <h3 class="font-display font-bold text-white">Adjust Gap (cm)</h3>
+        <input type="number" id="manGap" class="input-field text-2xl text-center">
+        <div class="flex gap-2"><button class="close-modal flex-1 btn-nav justify-center">Cancel</button><button id="btnSaveManGap" class="flex-1 btn-primary py-2">Update</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-16 opacity-0 transition-all px-4 py-3 rounded-xl bg-slate-800 border border-cyan-500 text-white font-mono text-sm shadow-2xl">
+    <span id="toastMsg">Ready</span>
+  </div>
+
+  <script>
+    // --- Audio Engine ---
+    const Audio = {
+      ctx: null, on: true, vol: 0.75,
+      init() { if(!this.ctx) this.ctx=new(window.AudioContext||window.webkitAudioContext)(); if(this.ctx.state==='suspended') this.ctx.resume(); },
+      play(freq, type='sine', dur=0.15, volMul=1) {
+        if(!this.on) return; this.init(); if(!this.ctx) return;
+        let o=this.ctx.createOscillator(), g=this.ctx.createGain(), t=this.ctx.currentTime;
+        o.type=type; o.frequency.setValueAtTime(freq,t);
+        g.gain.setValueAtTime(0.2*this.vol*volMul,t); g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+        o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(t+dur);
+      },
+      pass() { [523,659,784,1046].forEach((f,i)=>setTimeout(()=>this.play(f,i===3?'triangle':'sine',0.2), i*80)); },
+      fail() { this.play(150,'sawtooth',0.4,1.5); setTimeout(()=>this.play(130,'square',0.4,1.5), 10); },
+      adv() { 
+        if(!this.on||!this.ctx)return; this.init();
+        let o=this.ctx.createOscillator(), g=this.ctx.createGain(), t=this.ctx.currentTime;
+        o.frequency.setValueAtTime(220,t); o.frequency.exponentialRampToValueAtTime(880,t+0.3);
+        g.gain.setValueAtTime(0.15*this.vol,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.35);
+        o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(t+0.36);
+      },
+      alert() { this.play(146,'sawtooth',0.8,2); this.play(220,'sawtooth',0.8,2); this.play(73,'sine',0.8,2); },
+      fanfare() { [349,440,523,698].forEach((f,i)=>setTimeout(()=>this.play(f,'triangle',0.3,1.5), i*120)); },
+      crown() { [261,392,523,659,783].forEach((f,i)=>setTimeout(()=>this.play(f,'triangle',i===4?0.6:0.2,1.5), i*150)); }
+    };
+    ['click','keydown','touchstart'].forEach(e=>window.addEventListener(e,()=>Audio.init(),{once:true}));
+
+    // --- State & Core Logic ---
+    let db = []; 
+    let cfg = { sem: 'S2 25-26 Final', per: 'Period 2', nPer: 2, gap: 5, init: 5, step: 2, bMode: 'auto', bDist: 56, bName: 'Chasm Crawler', sOn: true, sVol: 75, auto: true, qFilt: 'active', sFilt: 'block' };
+    let tmr = null, pendGap = null, sdBot = null;
+
+    function initData() {
+      const h = [['S2 24-25','Period 3','Grumz',41],['S2 24-25','Period 2','King Toddd the 7th',31],['S1 25-26','Period 3','Bartholemew',40],['S1 25-26','Period 3','Pfshsh',30],['S2 25-26 Final','Period 3','Chasm Crawler',56],['S2 25-26 Final','Period 3','The Horn',46],['S2 25-26 Final','Period 2','Pinegrapple',34],['S2 25-26 Final','Period 2','Ethan\'s Shrug',32],['S2 25-26 Final','Period 2','Porker',0]];
+      let r=[]; h.forEach(b=>{
+        if(b[3]===0) r.push({sem:b[0],per:b[1],name:b[2],dist:5,res:'FAIL',ts:'10:00'});
+        else { for(let d=5;d<=b[3];d+=2) r.push({sem:b[0],per:b[1],name:b[2],dist:d,res:'PASS',ts:'10:00'}); r.push({sem:b[0],per:b[1],name:b[2],dist:b[3]+2,res:'FAIL',ts:'10:00'}); }
+      }); return r;
+    }
+    
+    function load() {
+      let jDB = localStorage.getItem('btg_db'), jCfg = localStorage.getItem('btg_cfg');
+      if(jDB) try { db=parseCSV(jDB); } catch(e){ db=initData(); } else db=initData();
+      if(jCfg) Object.assign(cfg, JSON.parse(jCfg));
+      Audio.on=cfg.sOn; Audio.vol=cfg.sVol/100;
+    }
+    function save() { localStorage.setItem('btg_db', toCSV(db)); localStorage.setItem('btg_cfg', JSON.stringify(cfg)); }
+    
+    function parseCSV(str) {
+      let l=str.trim().split(/\r?\n/), r=[];
+      for(let i=1;i<l.length;i++){
+        let p=l[i].split(',').map(x=>x.replace(/^"|"$/g,'').trim());
+        if(p.length>=5 && p[2]) r.push({sem:p[0], per:p[1], name:p[2], dist:parseFloat(p[3])||5, res:p[4], ts:p[5]||''});
+      } return r;
+    }
+    function toCSV(arr) { return 'Semester,Period,Robot Name,Round Distance (cm),Result,Timestamp\n'+arr.map(r=>`"${r.sem}","${r.per}","${r.name}",${r.dist},${r.res},${r.ts}`).join('\n'); }
+
+    function getBots(filt) {
+      let m=new Map(), a=filt?db.filter(filt):db;
+      a.forEach(r=>{
+        let k=`${r.sem}_${r.per}_${r.name}`;
+        if(!m.has(k)) m.set(k,{sem:r.sem,per:r.per,name:r.name,atts:[],max:0,fail:false,fDist:0});
+        let b=m.get(k); b.atts.push(r);
+        if(r.res==='PASS' && r.dist>b.max) b.max=r.dist;
+        if(r.res==='FAIL') { b.fail=true; b.fDist=r.dist; }
+      }); return Array.from(m.values()).sort((a,b)=>b.max-a.max || a.name.localeCompare(b.name));
+    }
+    
+    function getRec() {
+      if(cfg.bMode==='custom') return {d:cfg.bDist||56, n:cfg.bName, m:'Custom'};
+      let b=getBots(), max=0, n='Chasm Crawler', m='Auto';
+      b.forEach(x=>{ if(x.max>max){ max=x.max; n=x.name; m=`${x.sem} • ${x.per}`; } });
+      return {d:max||56, n, m};
+    }
+
+    // --- Action Engine ---
+    function logAttempt(name, dist, res) {
+      db = db.filter(a=>!(a.sem===cfg.sem && a.per===cfg.per && a.name===name && (a.res==='READY' || a.dist===dist)));
+      db.push({sem:cfg.sem, per:cfg.per, name, dist, res, ts:new Date().toLocaleTimeString()});
+      let isRec = (res==='PASS' && dist>getRec().d);
+      save(); render();
+      if(isRec) { Audio.fanfare(); confetti({particleCount:100, spread:70}); toast('💥 NEW RECORD!','👑'); }
+      else if(res==='PASS') { Audio.pass(); toast('CLEARED','✓'); } else { Audio.fail(); toast('FAILED','✗'); }
+      checkAuto();
+    }
+
+    function checkAuto() {
+      clearTmr(); let b=getBots(x=>x.sem===cfg.sem && x.per===cfg.per), cur=cfg.gap;
+      if(b.length===0) return;
+      let elig=b.filter(x=>!x.fail || x.fDist===cur); if(elig.length===0) return;
+      let unAtt=elig.filter(x=>!x.atts.some(a=>a.dist===cur && a.res!=='READY')); if(unAtt.length>0) return;
+      
+      let pass=elig.filter(x=>x.atts.some(a=>a.dist===cur && a.res==='PASS'));
+      if(pass.length>1) {
+        pendGap=cur+cfg.step;
+        if(cfg.auto) { showAdv(`All attempts logged. Advancing to ${pendGap}cm...`); tmr=setTimeout(()=>execAdv(pendGap), 2000); }
+      } else if(pass.length===1) {
+        pendGap=cur+cfg.step;
+        if(cfg.auto) { showAdv(`Sole survivor! Entering Sudden Death (${pendGap}cm)...`); tmr=setTimeout(()=>{execAdv(pendGap); Audio.alert();}, 2000); }
+      } else {
+        Audio.fail(); toast('All failed. Block over.','🏁');
+        let champ=elig.sort((a,b)=>b.max-a.max)[0]; if(champ) setTimeout(()=>crown(champ, champ.max>=getRec().d), 500);
+      }
+    }
+    
+    function showAdv(msg) { document.getElementById('autoAdvanceMsg').innerText=msg; document.getElementById('autoAdvanceBanner').classList.remove('hidden'); let b=document.getElementById('autoAdvanceProgressBar'); b.classList.remove('animate-countdown'); void b.offsetWidth; b.classList.add('animate-countdown'); }
+    function clearTmr() { clearTimeout(tmr); pendGap=null; document.getElementById('autoAdvanceBanner').classList.add('hidden'); document.getElementById('autoAdvanceProgressBar').classList.remove('animate-countdown'); }
+    function execAdv(g) { clearTmr(); cfg.gap=g; save(); Audio.adv(); render(); toast(`Gap advanced to ${g}cm`,'🚀'); }
+    function crown(b, r) {
+      document.getElementById('crownName').innerText=b.name; document.getElementById('crownDist').innerText=b.max+'cm'; document.getElementById('crownStatus').innerText=r?'RECORD':'CHAMPION';
+      document.getElementById('modalCrown').classList.remove('hidden'); Audio.crown(); confetti({particleCount:150,spread:90});
+      document.getElementById('tournamentCompleteBanner').classList.remove('hidden');
+    }
+
+    // --- UI Render ---
+    function render() {
+      let b=getBots(x=>x.sem===cfg.sem && x.per===cfg.per), inHunt=b.filter(x=>!x.fail), elim=b.filter(x=>x.fail);
+      let sems=Array.from(new Set(db.map(x=>x.sem).concat([cfg.sem]))).sort();
+      document.getElementById('selSemester').innerHTML=sems.map(s=>`<option value="${s}" ${s===cfg.sem?'selected':''}>${s}</option>`).join('');
+      
+      let pHtml=''; for(let i=1;i<=cfg.nPer;i++) { let pn=`Period ${i}`; pHtml+=`<button onclick="cfg.per='${pn}';cfg.gap=cfg.init;save();render();Audio.play(600)" class="px-3 py-1 rounded-lg text-xs font-bold transition ${pn===cfg.per?'bg-cyan-500 text-black':'text-slate-400 hover:bg-slate-800'}">${pn.replace('Period ','P')}</button>`; }
+      document.getElementById('periodSelector').innerHTML=pHtml;
+      document.getElementById('periodSelector').style.display = cfg.nPer===1?'none':'inline-flex';
+      document.getElementById('soloBadge').style.display = cfg.nPer===1?'inline-block':'none';
+
+      let isLocked=db.some(x=>x.sem===cfg.sem && x.per===cfg.per && x.res!=='READY');
+      document.getElementById('ruleConfigPill').innerText = isLocked ? '🔒 Locked' : '🔓 Editable';
+      document.getElementById('ruleLockBadge').innerText = isLocked ? 'Locked' : 'Editable';
+      document.getElementById('navSettingsBadge').style.display = isLocked ? 'inline' : 'none';
+      ['setPer','setInit','setStep'].forEach(id=>document.getElementById(id).disabled=isLocked);
+
+      document.getElementById('uiCurrentGap').innerText=cfg.gap; document.getElementById('uiInitGap').innerText=cfg.init;
+      document.getElementById('uiStep').innerText=cfg.step; document.getElementById('uiRoundNum').innerText=Math.max(1,Math.floor((cfg.gap-cfg.init)/cfg.step)+1);
+      document.getElementById('btnAdvLabel').innerText=`+${cfg.step}cm`; document.getElementById('uiBtnResetGap').innerText=cfg.init;
+      document.getElementById('uiAliveCount').innerText=inHunt.length; document.getElementById('uiElimCount').innerText=elim.length;
+      document.getElementById('queueBadge').innerText=`${inHunt.length} In Hunt`;
+
+      let rec=getRec(); document.getElementById('uiBenchDist').innerHTML=`${rec.d}<span class="text-lg">cm</span>`;
+      document.getElementById('uiBenchHolder').innerText=rec.n; document.getElementById('uiBenchMode').innerText=rec.m; document.getElementById('thRecord').innerText=rec.d;
+
+      // Queue Cards
+      let qList = cfg.qFilt==='active'?inHunt:(cfg.qFilt==='elim'?elim:b);
+      let qc=document.getElementById('queueCards'); qc.innerHTML='';
+      if(qList.length===0) document.getElementById('queueEmpty').classList.remove('hidden');
+      else {
+        document.getElementById('queueEmpty').classList.add('hidden');
+        qList.forEach((x,i)=>{
+          let cur=x.atts.find(a=>a.dist===cfg.gap && a.res!=='READY');
+          let bdg=x.fail?`<span class="text-[10px] bg-rose-950 text-rose-300 px-2 rounded">ELIM at ${x.fDist}cm</span>`:(cur?`<span class="text-[10px] bg-emerald-950 text-emerald-300 px-2 rounded">CLEARED ${cfg.gap}cm</span>`:`<span class="text-[10px] bg-amber-950 text-amber-300 px-2 rounded animate-pulse">Up to Span (${cfg.gap}cm)</span>`);
+          let topClass=(i===0 && cfg.qFilt==='active' && !x.fail)?'ring-2 ring-cyan-500 shadow-[0_0_15px_rgba(0,240,255,0.2)]':'';
+          let html=`<div class="bg-arena-950 border border-arena-border p-4 rounded-xl flex flex-col sm:flex-row justify-between gap-3 ${topClass}">
+            <div><div class="flex items-center gap-2"><b class="text-white">${x.name}</b>${bdg}</div><div class="text-xs text-slate-400 mt-1">Best: <b class="text-emerald-400">${x.max}cm</b></div></div>
+            <div class="flex gap-2">`;
+          if(!x.fail) {
+            html+=`<button onclick="logAttempt('${x.name}',${cfg.gap},'PASS')" class="px-3 py-1.5 rounded bg-emerald-900/50 hover:bg-emerald-500 text-emerald-300 hover:text-black font-bold text-xs transition">✓ Clear</button>`;
+            html+=`<button onclick="logAttempt('${x.name}',${cfg.gap},'FAIL')" class="px-3 py-1.5 rounded bg-rose-900/50 hover:bg-rose-500 text-rose-300 hover:text-white font-bold text-xs transition">✗ Fail</button>`;
+          } else html+=`<button onclick="Audio.play(800);db=db.filter(a=>!(a.sem===cfg.sem&&a.per===cfg.per&&a.name==='${x.name}'&&a.res==='FAIL'));save();render()" class="px-2 py-1 rounded bg-slate-800 text-[10px] text-slate-300">Undo</button>`;
+          html+=`<button onclick="Audio.play(800);db=db.filter(a=>!(a.sem===cfg.sem&&a.per===cfg.per&&a.name==='${x.name}'));save();render()" class="px-2 py-1 text-slate-500 hover:text-rose-400">✕</button></div></div>`;
+          qc.innerHTML+=html;
+        });
+      }
+      document.querySelectorAll('.q-btn').forEach(x=>x.className=x.dataset.q===cfg.qFilt?'q-btn px-3 py-1 rounded bg-arena-800 text-white':'q-btn px-3 py-1 rounded text-slate-400');
+
+      // Sudden Death
+      let sdBan=document.getElementById('suddenDeathBanner');
+      if(inHunt.length===1 && b.length>1) {
+        sdBan.classList.remove('hidden'); sdBan.classList.add('flex'); sdBot=inHunt[0];
+        document.getElementById('sdBotName').innerText=sdBot.name; document.getElementById('sdTargetGap').innerText=cfg.gap;
+        document.getElementById('sdBestSpan').innerText=sdBot.max; document.getElementById('sdRecord').innerText=rec.d;
+        document.getElementById('sdClearLabel').innerText=`(${cfg.gap}cm)`;
+      } else { sdBan.classList.remove('flex'); sdBan.classList.add('hidden'); sdBot=null; }
+
+      // Side Stats
+      if(cfg.nPer===1) {
+        document.getElementById('multiCard').classList.add('hidden'); document.getElementById('singleCard').classList.remove('hidden');
+        let clr=b.filter(x=>x.max>0);
+        document.getElementById('soloAvg').innerText=clr.length?(clr.reduce((a,x)=>a+x.max,0)/clr.length).toFixed(1):0;
+        document.getElementById('soloRate').innerText=b.length?Math.round((clr.length/b.length)*100)+'%':'0%';
+      } else {
+        document.getElementById('multiCard').classList.remove('hidden'); document.getElementById('singleCard').classList.add('hidden');
+        let all=getBots(x=>x.sem===cfg.sem), cg=document.getElementById('clashGrid'), cb=document.getElementById('clashBar'); cg.innerHTML=''; cb.innerHTML='';
+        let colors=['bg-cyan-500','bg-purple-500','bg-amber-500','bg-emerald-500'], pAvg=[];
+        for(let i=1;i<=cfg.nPer;i++) {
+          let pb=all.filter(x=>x.per===`Period ${i}`), clr=pb.filter(x=>x.max>0), avg=clr.length?(clr.reduce((a,x)=>a+x.max,0)/clr.length):0;
+          pAvg.push({p:`P${i}`, a:avg, c:colors[i-1]});
+          cg.innerHTML+=`<div class="bg-black/30 p-2 border border-arena-border rounded-xl"><div class="text-[10px] text-slate-400">P${i}</div><div class="text-xl font-display font-bold text-white">${avg.toFixed(1)}</div></div>`;
+        }
+        let tAvg=pAvg.reduce((s,x)=>s+x.a,0);
+        cb.innerHTML = tAvg>0 ? pAvg.map(x=>`<div class="${x.c} h-full" style="width:${(x.a/tAvg)*100}%"></div>`).join('') : '<div class="bg-slate-800 w-full h-full"></div>';
+        let srt=[...pAvg].sort((a,b)=>b.a-a.a);
+        document.getElementById('clashBadge').innerText=srt[0].a>srt[1]?.a ? `${srt[0].p} Leads (+${(srt[0].a-srt[1].a).toFixed(1)})` : 'Tie';
+      }
+
+      // Matrix
+      let mScope=document.getElementById('matrixScope').value, mBots=mScope==='current'?b:getBots(); mBots.sort((a,b)=>b.max-a.max);
+      let dSet=new Set(); mBots.forEach(x=>x.atts.forEach(a=>{if(a.res!=='READY')dSet.add(a.dist)})); 
+      for(let i=cfg.init;i<=cfg.gap;i+=cfg.step) dSet.add(i);
+      let dists=Array.from(dSet).sort((a,b)=>a-b), mh=document.getElementById('matrixHead'), mb=document.getElementById('matrixBody');
+      mh.innerHTML=`<tr><th class="p-2 sticky left-0 bg-arena-900 z-10">Robot</th>${dists.map(d=>`<th class="p-2 text-center ${d===cfg.gap&&mScope==='current'?'text-cyan-400':''}">${d}</th>`).join('')}</tr>`;
+      mb.innerHTML=mBots.map(x=>`<tr><td class="p-2 sticky left-0 bg-arena-950 z-10 truncate max-w-[120px] ${x.fail?'text-slate-500':''}">${x.name}</td>${dists.map(d=>{
+        let a=x.atts.find(y=>y.dist===d&&y.res!=='READY');
+        return `<td class="p-1 text-center ${d===cfg.gap&&mScope==='current'?'bg-cyan-500/10':''}">${a?(a.res==='PASS'?'<span class="text-emerald-400">✓</span>':'<span class="text-rose-400">✗</span>'):'<span class="text-slate-700">·</span>'}</td>`;
+      }).join('')}</tr>`).join('') || `<tr><td colspan="99" class="p-4 text-center">No data</td></tr>`;
+
+      // Standings
+      let sScope=cfg.sFilt, sBots=sScope==='block'?b:(sScope==='semester'?getBots(x=>x.sem===cfg.sem):getBots()); sBots.sort((a,b)=>b.max-a.max);
+      document.getElementById('colPer').style.display=(cfg.nPer===1&&sScope==='block')?'none':'table-cell';
+      document.querySelectorAll('.s-btn').forEach(x=>x.className=x.dataset.s===cfg.sFilt?'s-btn px-2 py-1 rounded bg-arena-800 text-white':'s-btn px-2 py-1 rounded text-slate-400');
+      document.getElementById('standingsBody').innerHTML=sBots.map((x,i)=>{
+        let rBdg=x.max===0?'<span class="text-[10px] bg-rose-900 text-rose-300 px-1 rounded">DNF</span>':(i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1);
+        let pct=rec.d>0?Math.min(100,Math.round((x.max/rec.d)*100)):0;
+        return `<tr><td class="p-2 text-center">${rBdg}</td><td class="p-2 font-bold ${x.fail?'text-slate-500':''}">${x.name} ${x.max>=rec.d&&x.max>0?'👑':''}</td><td class="p-2 text-center" style="display:${(cfg.nPer===1&&sScope==='block')?'none':'table-cell'}"><span class="text-[10px] bg-slate-800 px-1 rounded">${x.per.replace('Period ','P')}</span></td><td class="p-2"><div class="w-full bg-arena-950 h-1.5 rounded-full"><div class="bg-cyan-500 h-full rounded-full" style="width:${pct}%"></div></div></td><td class="p-2 text-right font-display text-cyan-400 text-lg">${x.max}</td></tr>`;
+      }).join('') || `<tr><td colspan="5" class="p-4 text-center">No records</td></tr>`;
+    }
+
+    // --- UI Interactions ---
+    function toast(m, i='✅') { let t=document.getElementById('toast'); document.getElementById('toastMsg').innerText=`${i} ${m}`; t.classList.remove('translate-y-16','opacity-0'); setTimeout(()=>t.classList.add('translate-y-16','opacity-0'), 2500); }
+    document.querySelectorAll('.close-modal').forEach(b=>b.addEventListener('click', e=>e.target.closest('.modal-overlay').classList.add('hidden')));
+
+    document.getElementById('btnSoundToggle').onclick=()=>{ cfg.sOn=!cfg.sOn; Audio.on=cfg.sOn; if(cfg.sOn)Audio.play(900); save(); document.getElementById('soundToggleIcon').innerText=cfg.sOn?'🔊':'🔇'; document.getElementById('btnSoundToggle').innerHTML=`<span id="soundToggleIcon">${cfg.sOn?'🔊':'🔇'}</span> FX: ${cfg.sOn?'ON':'OFF'}`; };
+    document.getElementById('btnOpenSettingsModal').onclick=()=>{ 
+      document.getElementById('setPer').value=cfg.nPer; document.getElementById('setInit').value=cfg.init; document.getElementById('setStep').value=cfg.step;
+      document.getElementById('setSem').value=cfg.sem; document.getElementById('setAutoAdv').checked=cfg.auto; document.getElementById('setSnd').checked=cfg.sOn;
+      document.getElementById('setVol').value=cfg.sVol; document.getElementById('setVolLabel').innerText=cfg.sVol+'%';
+      document.getElementById(cfg.bMode==='custom'?'bmCustom':'bmAuto').checked=true; document.getElementById('setBDist').value=cfg.bDist; document.getElementById('setBName').value=cfg.bName;
+      let l=db.some(x=>x.sem===cfg.sem&&x.per===cfg.per&&x.res!=='READY');
+      document.getElementById('setLockBanner').style.display=l?'block':'none'; ['setPer','setInit','setStep'].forEach(id=>document.getElementById(id).disabled=l);
+      document.getElementById('modalSettings').classList.remove('hidden'); 
+    };
+    document.getElementById('btnSaveSet').onclick=()=>{
+      if(!document.getElementById('setInit').disabled) { cfg.nPer=parseInt(document.getElementById('setPer').value)||2; cfg.init=parseInt(document.getElementById('setInit').value)||5; cfg.step=parseInt(document.getElementById('setStep').value)||2; cfg.gap=cfg.init; }
+      cfg.sem=document.getElementById('setSem').value||'S2'; cfg.auto=document.getElementById('setAutoAdv').checked; cfg.sOn=document.getElementById('setSnd').checked; Audio.on=cfg.sOn;
+      cfg.sVol=parseInt(document.getElementById('setVol').value)||75; Audio.vol=cfg.sVol/100; cfg.bMode=document.getElementById('bmCustom').checked?'custom':'auto';
+      cfg.bDist=parseInt(document.getElementById('setBDist').value)||56; cfg.bName=document.getElementById('setBName').value||'Holder';
+      save(); render(); document.getElementById('modalSettings').classList.add('hidden'); toast('Settings Saved','⚙️');
+    };
+    document.getElementById('setVol').oninput=e=>document.getElementById('setVolLabel').innerText=e.target.value+'%';
+
+    document.getElementById('btnOpenPrepareModal').onclick=()=>{ document.getElementById('wipeConf').value=''; document.getElementById('btnExecWipe').disabled=true; document.getElementById('modalPrepare').classList.remove('hidden'); };
+    document.getElementById('wipeConf').oninput=e=>document.getElementById('btnExecWipe').disabled=e.target.value.trim().toUpperCase()!=='RESET';
+    document.getElementById('btnDlBackup').onclick=()=>{ triggerDownload(toCSV(db),'btg_backup.csv'); toast('Backup Downloaded','💾'); };
+    document.getElementById('btnExecWipe').onclick=()=>{
+      let v=document.querySelector('input[name="wipe"]:checked').value;
+      if(v==='all') { db=[]; cfg.gap=cfg.init; } else { let b=getBots(x=>x.sem===cfg.sem&&x.per===cfg.per); db=db.filter(x=>!(x.sem===cfg.sem&&x.per===cfg.per)); b.forEach(x=>db.push({sem:cfg.sem,per:cfg.per,name:x.name,dist:cfg.init,res:'READY',ts:''})); cfg.gap=cfg.init; }
+      save(); render(); document.getElementById('modalPrepare').classList.add('hidden'); toast('Data Cleared','🧹');
+    };
+
+    document.getElementById('btnOpenBatchRoster').onclick=()=>{ document.getElementById('rosterTarget').innerText=`Target: ${cfg.per} • ${cfg.sem}`; document.getElementById('rosterInput').value=''; document.getElementById('modalRoster').classList.remove('hidden'); };
+    document.getElementById('btnLoadRoster').onclick=()=>{
+      let n=document.getElementById('rosterInput').value.split(/\r?\n/).map(x=>x.trim()).filter(x=>x);
+      n.forEach(name=>{ if(!db.some(a=>a.sem===cfg.sem&&a.per===cfg.per&&a.name===name)) db.push({sem:cfg.sem,per:cfg.per,name,dist:cfg.init,res:'READY',ts:''}); });
+      save(); render(); document.getElementById('modalRoster').classList.add('hidden'); toast(`Loaded ${n.length} robots`,'👥');
+    };
+
+    document.getElementById('btnCsvModal').onclick=()=>{ document.getElementById('csvEditor').value=toCSV(db); document.getElementById('modalCsv').classList.remove('hidden'); };
+    document.getElementById('btnCsvClean').onclick=()=>{ try{ db=parseCSV(document.getElementById('csvEditor').value); document.getElementById('csvEditor').value=toCSV(db); toast('Syntax Cleaned','✨'); }catch(e){toast('Error','❌');} };
+    document.getElementById('btnCsvCopy').onclick=()=>{ document.getElementById('csvEditor').select(); document.execCommand('copy'); toast('Copied','📋'); };
+    document.getElementById('btnCsvExport').onclick=()=>{ triggerDownload(toCSV(db),`btg_log_${cfg.sem}.csv`); toast('Exported','📥'); };
+    document.getElementById('btnCsvApply').onclick=()=>{ try{ db=parseCSV(document.getElementById('csvEditor').value); save(); render(); document.getElementById('modalCsv').classList.add('hidden'); toast('Applied','💾'); }catch(e){toast('Parse Error','❌');} };
+
+    document.getElementById('btnToggleProjector').onclick=()=>{
+      let f=!document.fullscreenElement;
+      if(f) document.documentElement.requestFullscreen().catch(()=>{}); else document.exitFullscreen();
+      document.body.classList.toggle('projector-mode', f);
+      document.getElementById('btnToggleProjector').innerHTML = f ? '📺 Standard' : '📺 Projector';
+      toast(f?'Projector Mode On':'Standard View On','📽️');
+    };
+
+    document.getElementById('btnAdvance').onclick=()=>{ clearTmr(); cfg.gap+=cfg.step; save(); Audio.adv(); render(); toast(`Gap ${cfg.gap}cm`,'🚀'); };
+    document.getElementById('btnCancelAutoAdvance').onclick=()=>{ clearTmr(); toast('Auto-advance paused','⏸️'); };
+    document.getElementById('btnInstantAutoAdvance').onclick=()=>{ if(pendGap) execAdv(pendGap); };
+    document.getElementById('btnManualGap').onclick=()=>{ document.getElementById('manGap').value=cfg.gap; document.getElementById('modalGap').classList.remove('hidden'); };
+    document.getElementById('btnSaveManGap').onclick=()=>{ let v=parseInt(document.getElementById('manGap').value); if(v){ cfg.gap=v; save(); render(); document.getElementById('modalGap').classList.add('hidden'); toast(`Gap updated`,'⚙️'); } };
+    document.getElementById('btnBulkPass').onclick=()=>{
+      let inHunt=getBots(x=>x.sem===cfg.sem&&x.per===cfg.per&&!x.fail), m=0;
+      inHunt.forEach(b=>{ if(!b.atts.some(a=>a.dist===cfg.gap&&a.res!=='READY')){ db=db.filter(a=>!(a.sem===cfg.sem&&a.per===cfg.per&&a.name===b.name&&a.res==='READY')); db.push({sem:cfg.sem,per:cfg.per,name:b.name,dist:cfg.gap,res:'PASS',ts:new Date().toLocaleTimeString()}); m++; } });
+      if(m>0) { Audio.pass(); save(); render(); toast(`Cleared ${m} bots`,'✓'); checkAuto(); } else toast('All complete','ℹ️');
+    };
+    document.getElementById('btnResetGap').onclick=()=>{ clearTmr(); cfg.gap=cfg.init; save(); render(); toast(`Gap reset to ${cfg.init}cm`,'↺'); };
+    document.getElementById('btnRestoreDemo').onclick=()=>{ if(confirm('Restore demo data?')){ db=initData(); cfg.nPer=2; cfg.gap=5; save(); render(); toast('Demo Restored','🔄'); } };
+    document.getElementById('selSemester').onchange=e=>{ cfg.sem=e.target.value; save(); render(); };
+    document.getElementById('matrixScope').onchange=e=>{ render(); };
+    document.querySelectorAll('.q-btn').forEach(b=>b.onclick=e=>{ cfg.qFilt=e.target.dataset.q; render(); });
+    document.querySelectorAll('.s-btn').forEach(b=>b.onclick=e=>{ cfg.sFilt=e.target.dataset.s; render(); });
+
+    document.getElementById('btnSdClear').onclick=()=>{ if(sdBot) logAttempt(sdBot.name, cfg.gap, 'PASS'); };
+    document.getElementById('btnSdFail').onclick=()=>{ if(sdBot) { logAttempt(sdBot.name, cfg.gap, 'FAIL'); crown(sdBot, sdBot.max>getRec().d); } };
+    document.getElementById('btnSdRetire').onclick=()=>{ if(sdBot) crown(sdBot, sdBot.max>=getRec().d); };
+    
+    document.getElementById('btnDlResults').onclick=e=>downloadResults(e);
+    document.getElementById('bannerDownloadResultsBtn').onclick=e=>downloadResults(e);
+    document.getElementById('btnDlLog').onclick=()=>document.getElementById('btnCsvExport').click();
+    document.getElementById('bannerDownloadLogBtn').onclick=()=>document.getElementById('btnCsvExport').click();
+    document.getElementById('btnCloseCrown').onclick=()=>{ document.getElementById('modalCrown').classList.add('hidden'); };
+
+    function downloadResults(e) {
+      e.stopPropagation();
+      let b=getBots(x=>x.sem===cfg.sem&&x.per===cfg.per).sort((a,b)=>b.max-a.max), c='Rank,Robot Name,Period,Longest Distance (cm),Status,Gap from Winner (cm),Completed Timestamp\n';
+      let w=b[0]?.max||0;
+      b.forEach((x,i)=>c+=`${i+1},"${x.name}",${x.per},${x.max},${x.fail?'DNF':'Success'},${x.max-w},${new Date().toLocaleTimeString()}\n`);
+      triggerDownload(c, `btg_results_${cfg.sem}_${cfg.per}.csv`); toast('Results Downloaded','📥');
+    }
+    function triggerDownload(content, file) { let a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(content); a.download=file; a.click(); }
+    
+    // Laptop Hotkeys
+    window.addEventListener('keydown', e=>{
+      if(document.querySelector('.modal-overlay:not(.hidden)')) { if(e.key==='Escape') document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.add('hidden')); return; }
+      if(['INPUT','TEXTAREA'].includes(document.activeElement?.tagName)) return;
+      if(e.key==='Escape') clearTmr();
+      let act=getBots(x=>x.sem===cfg.sem&&x.per===cfg.per&&!x.fail).filter(x=>!x.atts.some(a=>a.dist===cfg.gap&&a.res!=='READY'));
+      if(e.key==='1') { e.preventDefault(); if(act.length) logAttempt(act[0].name, cfg.gap, 'PASS'); }
+      if(e.key==='2') { e.preventDefault(); if(act.length) logAttempt(act[0].name, cfg.gap, 'FAIL'); }
+      if(e.code==='Space') { e.preventDefault(); document.getElementById('btnAdvance').click(); }
+    });
+
+    window.onload=()=>{ load(); render(); };
+  </script>
+</body>
+</html>
