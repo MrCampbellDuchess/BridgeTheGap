@@ -228,11 +228,7 @@ window.Arena.UI = (function () {
     const isLocked = State.db.some(
       x => x.sem === State.cfg.sem && x.per === State.cfg.per && x.res !== 'READY'
     );
-    const ruleConfigPill = document.getElementById('ruleConfigPill');
-    const ruleLockBadge = document.getElementById('ruleLockBadge');
     const navSettingsBadge = document.getElementById('navSettingsBadge');
-    if (ruleConfigPill) ruleConfigPill.innerText = isLocked ? '🔒 Locked' : '🔓 Editable';
-    if (ruleLockBadge) ruleLockBadge.innerText = isLocked ? 'Locked' : 'Editable';
     if (navSettingsBadge) navSettingsBadge.style.display = isLocked ? 'inline' : 'none';
 
     ['setPer', 'setInit', 'setStep'].forEach(id => {
@@ -242,8 +238,6 @@ window.Arena.UI = (function () {
 
     // Round metrics
     const currentGap = document.getElementById('uiCurrentGap');
-    const initGap = document.getElementById('uiInitGap');
-    const stepEl = document.getElementById('uiStep');
     const roundNum = document.getElementById('uiRoundNum');
     const advLabel = document.getElementById('btnAdvLabel');
     const btnResetGapEl = document.getElementById('uiBtnResetGap');
@@ -252,8 +246,6 @@ window.Arena.UI = (function () {
     const queueBadge = document.getElementById('queueBadge');
 
     if (currentGap) currentGap.innerText = State.cfg.gap;
-    if (initGap) initGap.innerText = State.cfg.init;
-    if (stepEl) stepEl.innerText = State.cfg.step;
     if (roundNum) {
       roundNum.innerText = Math.max(
         1,
@@ -266,25 +258,10 @@ window.Arena.UI = (function () {
     if (elimCount) elimCount.innerText = elim.length;
     if (queueBadge) queueBadge.innerText = `${inHunt.length} In Hunt`;
 
-    // Apex Benchmark
+    // Apex Benchmark target on Leaderboard header
     const rec = State.getRec();
-    const benchDist = document.getElementById('uiBenchDist');
-    const benchHolder = document.getElementById('uiBenchHolder');
-    const benchMode = document.getElementById('uiBenchMode');
     const thRecord = document.getElementById('thRecord');
-
-    if (benchDist) benchDist.innerHTML = `${rec.d}<span class="text-lg">cm</span>`;
-    if (benchHolder) benchHolder.innerText = rec.n;
-    if (benchMode) benchMode.innerText = rec.m;
     if (thRecord) thRecord.innerText = rec.d;
-
-    // Rules Summary Card
-    const rcInit = document.getElementById('rcInit');
-    const rcStep = document.getElementById('rcStep');
-    const rcPer = document.getElementById('rcPer');
-    if (rcInit) rcInit.innerText = State.cfg.init;
-    if (rcStep) rcStep.innerText = `+${State.cfg.step}`;
-    if (rcPer) rcPer.innerText = State.cfg.nPer;
 
     // Render Queue Cards
     const qList =
@@ -684,20 +661,6 @@ window.Arena.UI = (function () {
         if (!isInDialog) dlg.close();
       });
     });
-
-    // Sound toggle in top navigation
-    const btnSoundToggle = document.getElementById('btnSoundToggle');
-    if (btnSoundToggle) {
-      btnSoundToggle.onclick = () => {
-        State.cfg.sOn = !State.cfg.sOn;
-        Audio.on = State.cfg.sOn;
-        if (State.cfg.sOn) Audio.playTone(900, 'sine', 0.15);
-        State.save();
-        btnSoundToggle.innerHTML = `<span>${State.cfg.sOn ? '🔊' : '🔇'}</span> FX: ${
-          State.cfg.sOn ? 'ON' : 'OFF'
-        }`;
-      };
-    }
 
     // Modal navigation buttons
     const btnOpenSettingsModal = document.getElementById('btnOpenSettingsModal');

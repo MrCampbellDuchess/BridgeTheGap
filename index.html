@@ -54,7 +54,6 @@
       </div>
       
       <div class="flex flex-wrap items-center gap-2">
-        <button id="btnSoundToggle" class="btn-nav"><span id="soundToggleIcon">🔊</span> FX: ON</button>
         <button id="btnOpenSettingsModal" class="btn-nav text-amber-300 border-amber-500/40 hover:border-amber-400">⚙️ Settings <span id="navSettingsBadge" class="hidden text-[10px] px-1 rounded bg-amber-500/20">🔒</span></button>
         <button id="btnOpenPrepareModal" class="btn-nav text-rose-300 border-rose-700/60 hover:border-rose-500">⚠️ Prepare/Reset</button>
         <button id="btnOpenBatchRoster" class="btn-nav text-cyan-400 border-cyan-500/40 hover:border-cyan-400">👥 Quick Roster</button>
@@ -128,8 +127,6 @@
           <div id="periodSelector" class="inline-flex rounded-lg bg-arena-950 p-1 border border-arena-border"></div>
           <span id="soloBadge" class="hidden px-2 py-1 bg-cyan-950 border border-cyan-800 text-cyan-300 rounded-lg">Period 1 (Solo)</span>
           <select id="selSemester" class="bg-arena-950 border border-arena-border rounded px-2.5 py-1 text-cyan-300 font-mono"></select>
-          <span id="ruleConfigPill" class="px-2 py-1 rounded bg-arena-950 border border-arena-border text-slate-300"></span>
-          <span id="autoAdvanceBadge" class="px-2 py-1 rounded bg-cyan-950 border border-cyan-800 text-cyan-300">⚡ AUTO-ADVANCE</span>
         </div>
         
         <div class="flex items-baseline gap-6 pt-2">
@@ -142,7 +139,7 @@
           </div>
           
           <div class="border-l border-arena-border pl-5 text-xs text-slate-400 space-y-1 font-mono">
-            <div>Round: <b id="uiRoundNum" class="text-white text-sm">1</b> (Starts <span id="uiInitGap" class="text-amber-300">5</span>, +<span id="uiStep" class="text-cyan-300">2</span>)</div>
+            <div>Round: <b id="uiRoundNum" class="text-white text-sm">1</b></div>
             <div>In Hunt: <b id="uiAliveCount" class="text-emerald-400 text-sm">0</b></div>
             <div>Eliminated: <b id="uiElimCount" class="text-rose-400 text-sm">0</b></div>
           </div>
@@ -220,24 +217,6 @@
               <div class="text-[10px] text-emerald-400 font-mono">CLEAR RATE</div>
               <div class="text-2xl font-display font-bold text-white" id="soloRate">0%</div>
             </div>
-          </div>
-        </div>
-
-        <!-- Apex Benchmark -->
-        <div class="card bg-gradient-to-br from-arena-900 to-arena-950 text-center border-amber-500/30">
-          <div class="text-xs font-mono text-amber-400 font-bold mb-1">👑 APEX BENCHMARK RECORD</div>
-          <div class="text-4xl font-display font-bold text-cyan-400 drop-shadow-[0_0_15px_rgba(0,240,255,0.3)]" id="uiBenchDist">56<span class="text-lg">cm</span></div>
-          <div class="text-sm font-bold text-white mt-1 font-display" id="uiBenchHolder">Chasm Crawler</div>
-          <div class="text-[11px] font-mono text-slate-400 mt-2 bg-black/50 p-1 rounded border border-arena-border" id="uiBenchMode">Auto Mode</div>
-        </div>
-
-        <!-- Active Rules Card -->
-        <div class="card p-4 bg-arena-950 text-xs font-mono text-slate-400 border-arena-border">
-          <div class="flex justify-between mb-2"><b class="text-white">Active Flight Rules</b> <span id="ruleLockBadge" class="px-1.5 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded">Locked</span></div>
-          <div class="grid grid-cols-3 gap-1.5 text-center">
-            <div class="border border-arena-border p-1.5 rounded bg-black/40">START<br><b id="rcInit" class="text-amber-300 text-sm">5</b>cm</div>
-            <div class="border border-arena-border p-1.5 rounded bg-black/40">STEP<br><b id="rcStep" class="text-cyan-300 text-sm">+2</b>cm</div>
-            <div class="border border-arena-border p-1.5 rounded bg-black/40">PERIODS<br><b id="rcPer" class="text-purple-300 text-sm">2</b></div>
           </div>
         </div>
       </aside>
